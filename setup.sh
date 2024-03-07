@@ -12,6 +12,7 @@ for d in database/{pwn,crypto}/*; do
     fi
 done
 
+
 # Create network
 sudo docker network create ctfnet
 
@@ -21,3 +22,13 @@ if [ ! -d ghidra_11.0_PUBLIC ]; then
     unzip ghidra_11.0_PUBLIC_20231222.zip
     rm ghidra_11.0_PUBLIC_20231222.zip
 fi
+
+for d in database/*; do
+    if [ -d "$d" ]; then
+        mkdir -p "./logging/${d#database/}"
+    fi
+done
+
+mkdir -p keys
+touch keys/mixtral_api.txt
+echo "Fill your mixtral_api in keys/mixtral_api.txt"

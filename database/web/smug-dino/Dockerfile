@@ -1,11 +1,14 @@
 FROM ubuntu:18.04
 
+RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list &&\
+	sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
+
 RUN apt-get -y update && apt-get -y install libpcre3-dev wget make build-essential zlib1g-dev  npm
 
 # INSTALL VULNERABLE VERSION OF NGINX 
 RUN wget "https://nginx.org/download/nginx-1.17.6.tar.gz" && \
-    tar zxf "nginx-1.17.6.tar.gz" && \ 
-    cd "nginx-1.17.6" && \ 
+    tar zxf "nginx-1.17.6.tar.gz" && \
+    cd "nginx-1.17.6" && \
     ./configure && \
     make && \
     make install  

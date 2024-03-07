@@ -1,5 +1,8 @@
 FROM ubuntu:20.04 as ctf
 
+RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list &&\
+	sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
+
 RUN apt-get update && \
     apt-get install -y python3 python3-pip
 
