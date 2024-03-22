@@ -4,19 +4,18 @@ import shutil
 from .utils.ctflogging import Status
 from .utils.ghidra_call import Ghidra_Call
 from .utils.dockertool import DockerHelper
-from .models.LocalMixtral import LocalMixtral
+from .models.deepseek import DeepSeek
 from .prompt import *
 import logging
 
-
-class LocalMixtralTask:
+class DeepSeekTask:
 
     def __init__(self, question_path: str, task_config: dict):
         self.log = Status()
         self.config = task_config
         self.chal_name = self.config["name"]
         self.chal_path = os.path.abspath(question_path)
-        self.model = self.mixtral_init()
+        self.model = self.deepseek_init()
         self.valid = False
         self.real_flag = self.config["flag"] \
             if isinstance(self.config["flag"], str) \
@@ -65,9 +64,9 @@ class LocalMixtralTask:
         # shutil.copytree(self.chal_path, self.sol_path)
         shutil.copytree(self.chal_path, self.sol_path, copy_function=shutil.copy2)
 
-    def mixtral_init(self):
-        model = LocalMixtral(
-            "mistralai/Mixtral-8x7B-Instruct-v0.1"
+    def deepseek_init(self):
+        model = DeepSeek(
+            "deepseek-ai/deepseek-coder-6.7b-instruct"
         )
 
         return model
