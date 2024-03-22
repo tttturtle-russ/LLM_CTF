@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Build main docker image
-sudo docker build -t ctfenv .
+docker build -t ctfenv .
 
 # Build docker image for each challenge
 for d in database/{pwn,crypto}/*; do
@@ -14,7 +14,7 @@ done
 
 
 # Create network
-sudo docker network create ctfnet
+docker network create ctfnet
 
 # Download and unpack Ghidra
 if [ ! -d ghidra_11.0_PUBLIC ]; then
@@ -31,4 +31,4 @@ done
 
 mkdir -p keys
 touch keys/mixtral_api.txt
-echo "Fill your mixtral_api in keys/mixtral_api.txt"
+echo "If you want to use Mixtral API, fill your mixtral_api in keys/mixtral_api.txt"
