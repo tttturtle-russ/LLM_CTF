@@ -8,6 +8,7 @@ class LocalMixtral:
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_id)
         self.model = AutoModelForCausalLM.from_pretrained(
             self.model_id,
+            # run on multi GPUs
             device_map='auto',
             torch_dtype=torch.float16,
             load_in_8bit=False
@@ -28,6 +29,7 @@ class LocalMixtral:
             temperature=temperature,
             top_p=top_p
         )
+        print(f"test: type of outputs is {type(outputs)}")
         print("test: finish generate")
         resp = self.tokenizer.decode(outputs, skip_special_tokens=True)
         print("test: finish decode")
