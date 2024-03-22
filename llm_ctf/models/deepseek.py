@@ -20,14 +20,13 @@ class DeepSeek:
             self.prompts,
             add_generation_prompt=True,
             return_tensors="pt"
-        ).to("cuda")
+        ).to(self.model.device)
 
         outputs = self.model.generate(
             inputs,
             max_new_tokens=512,
             pad_token_id=self.tokenizer.pad_token_id,
             eos_token_id=self.tokenizer.eos_token_id,
-            tempurature=tempurature,
             top_p=top_p,
             do_sample=False
         )
