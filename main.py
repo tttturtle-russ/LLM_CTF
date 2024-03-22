@@ -66,7 +66,7 @@ if __name__ == "__main__":
     except FileNotFoundError as e:
         print(f"\033[91m{e}\nPlease specify right question path")
         exit(1)
-        
+
     success = 0
     chal_name = chal_json["name"]
     for i in range(EXPERIMENT_REPEAT):
