@@ -19,6 +19,7 @@ class LocalMixtral:
         inputs = (self.tokenizer.
                   apply_chat_template(self.prompts, return_tensors="pt").
                   to(torch.cuda.current_device()))
+        print("test: finish apply_chat_template")
         outputs = self.model.generate(
             inputs,
             max_new_tokens=500,
@@ -27,6 +28,8 @@ class LocalMixtral:
             temperature=temperature,
             top_p=top_p
         )
+        print("test: finish generate")
         resp = self.tokenizer.decode(outputs, skip_special_tokens=True)
+        print("test: finish decode")
         self.prompts.append({"role": "assistant", "content": resp})
         return resp
