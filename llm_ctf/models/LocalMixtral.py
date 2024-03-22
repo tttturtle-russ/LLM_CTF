@@ -31,7 +31,7 @@ class LocalMixtral:
         )
         print(f"test: type of outputs is {type(outputs)}")
         print("test: finish generate")
-        resp = self.tokenizer.decode(outputs, skip_special_tokens=True)
+        resp = self.tokenizer.decode(outputs.squeeze(), skip_special_tokens=True)
         print("test: finish decode")
         self.prompts.append({"role": "assistant", "content": resp})
         return resp
