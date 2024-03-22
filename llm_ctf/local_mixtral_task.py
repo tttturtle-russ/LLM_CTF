@@ -5,8 +5,8 @@ from .utils.ctflogging import Status
 from .utils.ghidra_call import Ghidra_Call
 from .utils.dockertool import DockerHelper
 from .models.LocalMixtral import LocalMixtral
-
-
+from .prompt import *
+import logging
 class LocalMixtralTask:
 
     def __init__(self, question_path: str, task_config: dict):
