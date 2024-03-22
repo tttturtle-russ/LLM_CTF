@@ -10,7 +10,7 @@ DEFAULT_PATH = Path(__file__).parent.resolve()
 def main(question_path, prompt_path, chal_config):
     
     os.chdir(DEFAULT_PATH)
-    
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
     mixtral_task = mixtral.LocalMixtralTask(question_path=question_path,
                                             task_config=chal_config)
     

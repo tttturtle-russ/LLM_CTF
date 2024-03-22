@@ -97,12 +97,10 @@ class LocalMixtralTask:
                     prompt += PROMPT_PORT_INFO.format(container_image=self.docker_container, challenge_port=self.port)
         print(self.log.user_message(prompt + '\n' + "\n".join(self.extra_info) + append_msg))
         resp = self.model.generate(prompt + "\n".join(self.extra_info), append_msg=append_msg)
-        print("test: " + resp)
         print(self.log.assistant_message(resp))
         return resp
 
     def save_code(self, resp_text: str, file_name="sol.py"):
-        print("test: Writing code to file")
         code_snpt = self.extract_python_code(resp_text)
         with open(os.path.join(self.sol_path, file_name), 'w') as f:
             f.write(code_snpt)
