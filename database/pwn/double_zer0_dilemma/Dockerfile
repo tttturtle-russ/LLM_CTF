@@ -4,9 +4,6 @@ FROM ubuntu:20.04 as ctf
 ENV HOME /root
 RUN id
 
-RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list &&\
-	sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
-
 #install gcc
 RUN apt-get update
 RUN apt-get install -y gcc

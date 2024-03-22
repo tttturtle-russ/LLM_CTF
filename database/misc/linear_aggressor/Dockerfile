@@ -6,9 +6,6 @@ FROM ubuntu:20.04 as ctf
 # python3-pip
 # socat - used to create multiple connections to the challenge box
 
-RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list &&\
-	sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
-
 # RUN executes the parameters in the context of the container
 RUN apt-get update && apt-get install -y python3 python3-pip socat
 RUN /usr/bin/python3 -m pip install numpy
