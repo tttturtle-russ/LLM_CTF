@@ -92,11 +92,13 @@ class DeepSeekTask:
                                         category_description=category_friendly[self.chal_category],
                                         name=self.chal_name, files=",".join(self.files), description=self.description,
                                         extra_info=self.extra_info)
+            print("test: finish prompt")
             if self.port:
                 if self.proto == "nc":
                     prompt += PROMPT_NC_INFO.format(container_image=self.docker_container, challenge_port=self.port)
                 else:
                     prompt += PROMPT_PORT_INFO.format(container_image=self.docker_container, challenge_port=self.port)
+        print("")
         print(self.log.user_message(prompt + '\n' + "\n".join(self.extra_info) + append_msg))
         resp = self.model.generate(prompt + "\n".join(self.extra_info), append_msg=append_msg)
         print(self.log.assistant_message(resp))
