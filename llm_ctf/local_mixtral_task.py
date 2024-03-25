@@ -124,8 +124,7 @@ class LocalMixtralTask:
         if template_prompt:
             prompt = PROMPT_INIT.format(category=self.chal_category,
                                         category_description=category_friendly[self.chal_category],
-                                        name=self.chal_name, files=",".join(self.files), description=self.description,
-                                        extra_info=self.extra_info)
+                                        name=self.chal_name, files=",".join(self.files), description=self.description)
             if self.port:
                 if self.proto == "nc":
                     prompt += PROMPT_NC_INFO.format(container_image=self.docker_container, challenge_port=self.port)
@@ -137,7 +136,7 @@ class LocalMixtralTask:
         return resp
 
     def forward(self, resp_text):
-        print("test: forward")
+        resp = ""
         code, _type = self._extract_code(resp_text)
         while _type is None and code is None:
             print(self.log.user_message("No Bash or Python code was found. Regenerating response now"))
@@ -153,6 +152,7 @@ class LocalMixtralTask:
 
 
     def save_code(self, code: str, file_name="sol.py"):
+        print(self.log.assistant_message(f"Saving python code to {file_name}..."))
         with open(os.path.join(self.sol_path, file_name), 'w') as f:
             f.write(code)
 

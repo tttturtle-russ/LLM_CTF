@@ -54,8 +54,6 @@ def main(question_path, prompt_path, chal_config):
         # resp = task.task_prompt(prompt=prompt_path, use_file=False, append_msg="", template_prompt=False)
         resp, code = task.forward(resp)
         print(f"test: {i} turn, code is \n{code}")
-        if code is None:
-            continue
         solved = task.validate_sol(resp, code)
         print(f"test: {i} turn, is solved {solved}")
         if solved:
