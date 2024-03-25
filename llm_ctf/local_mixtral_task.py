@@ -40,6 +40,7 @@ class LocalMixtralTask:
         self.docker_container = self.config.get("container_image", None)
         self.player_docker = "ctfenv"
         self.docker_tool = DockerHelper(self.player_docker)
+        print("test: finish init")
 
     def read_dir(self):
         for i in self.files:

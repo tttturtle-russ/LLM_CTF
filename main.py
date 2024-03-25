@@ -46,6 +46,7 @@ def main(question_path, prompt_path, chal_config):
     except Exception as e:
         print(f"\033[91mRuntimeError: {e}")
         exit(1)
+    print("test: start task_prompt")
     resp = task.task_prompt(prompt=prompt_path, use_file=False, append_msg="", template_prompt=False)
     solved = False
     for i in tqdm(range(args.max_turn)):
@@ -88,6 +89,7 @@ if __name__ == "__main__":
     success = 0
     chal_name = chal_json["name"]
     for i in range(EXPERIMENT_REPEAT):
+        print("test: expr")
         try:
             if main(question_path, prompt_path, chal_json):
                 success += 1
