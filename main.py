@@ -47,7 +47,7 @@ def main(question_path, prompt_path, chal_config):
         print(f"\033[91mRuntimeError: {e}")
         exit(1)
     print("test: start task_prompt")
-    resp = task.task_prompt(prompt=prompt_path, use_file=False, append_msg="", template_prompt=False)
+    resp = task.task_prompt(prompt=prompt_path, use_file=False, append_msg="", template_prompt=True)
     solved = False
     for i in tqdm(range(args.max_turn)):
         print(f"test: {i} turn")
