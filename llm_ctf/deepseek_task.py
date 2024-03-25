@@ -90,7 +90,8 @@ class DeepSeekTask:
         if template_prompt:
             prompt = PROMPT_INIT.format(category=self.chal_category,
                                         category_description=category_friendly[self.chal_category],
-                                        name=self.chal_name, files=",".join(self.files), description=self.description)
+                                        name=self.chal_name, files=",".join(self.files), description=self.description,
+                                        extra_info=self.extra_info)
             if self.port:
                 if self.proto == "nc":
                     prompt += PROMPT_NC_INFO.format(container_image=self.docker_container, challenge_port=self.port)
@@ -100,6 +101,9 @@ class DeepSeekTask:
         resp = self.model.generate(prompt + "\n".join(self.extra_info), append_msg=append_msg)
         print(self.log.assistant_message(resp))
         return resp
+
+    def forward(self):
+        ...
 
     def save_code(self, resp_text: str, file_name="sol.py"):
         code_snpt = self.extract_python_code(resp_text)

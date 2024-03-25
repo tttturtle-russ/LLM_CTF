@@ -4,7 +4,7 @@ import shutil
 from .utils.ctflogging import Status
 from .utils.ghidra_call import Ghidra_Call
 from .utils.dockertool import DockerHelper
-from .models.LocalMixtral import LocalMixtral
+from .models.local_mixtral import LocalMixtral
 from .prompt import *
 import logging
 
@@ -67,10 +67,31 @@ class LocalMixtralTask:
 
     def mixtral_init(self):
         model = LocalMixtral(
-            "mistralai/Mixtral-8x7B-Instruct-v0.1"
+            # "mistralai/Mixtral-8x7B-Instruct-v0.1"
+            "mistralai/Mistral-7B-Instruct-v0.2"
         )
 
         return model
+
+    def _extract_code(self, text):
+        print(self.log.assistant_message("Format solver"))
+        python_pattern = r'```python\n(.*?)```'
+        matches = re.findall(python_pattern, text, re.DOTALL)
+        if matches:
+            print("Python solver found:")
+            print(matches[0].strip())
+            return matches[0].strip(), "Python"
+
+        bash_pattern = r'```bash\n(.*?)```'
+        matches = re.findall(bash_pattern, text, re.DOTALL)
+        if matches:
+            print("Bash solver found:")
+            print(matches[0].strip())
+            return matches[0].strip(), "Bash"
+
+        print("No bash solver or python solver found in response")
+        return None, None
+
 
     def extract_python_code(self, text):
         print(self.log.assistant_message("Format solver"))
@@ -81,7 +102,18 @@ class LocalMixtralTask:
             print(matches[0].strip())
             return matches[0].strip()
         else:
-            return "Python code block not found."
+            return None
+
+    def extract_bash_code(self, text):
+        print(self.log.assistant_message("Format solver"))
+        pattern = r'```bash\n(.*?)```'
+        matches = re.findall(pattern, text, re.DOTALL)
+        if matches:
+            print("Solver found:")
+            print(matches[0].strip())
+            return matches[0].strip()
+        else:
+            return None
 
     def task_prompt(self, prompt, use_file=False, append_msg="", template_prompt=True):
         if use_file:
@@ -91,7 +123,8 @@ class LocalMixtralTask:
         if template_prompt:
             prompt = PROMPT_INIT.format(category=self.chal_category,
                                         category_description=category_friendly[self.chal_category],
-                                        name=self.chal_name, files=",".join(self.files), description=self.description)
+                                        name=self.chal_name, files=",".join(self.files), description=self.description,
+                                        extra_info=self.extra_info)
             if self.port:
                 if self.proto == "nc":
                     prompt += PROMPT_NC_INFO.format(container_image=self.docker_container, challenge_port=self.port)
@@ -102,12 +135,26 @@ class LocalMixtralTask:
         print(self.log.assistant_message(resp))
         return resp
 
-    def save_code(self, resp_text: str, file_name="sol.py"):
-        code_snpt = self.extract_python_code(resp_text)
-        with open(os.path.join(self.sol_path, file_name), 'w') as f:
-            f.write(code_snpt)
+    def forward(self):
+        code, _type = self._extract_code(resp_text)
+        while _type is None and code is None:
+            print(self.log.user_message("No Bash or Python code was found. Regenerating response now"))
+            resp = self.model.generate("", retry=True)
+            print(self.log.assistant_message(resp))
+            code, _type = self._extract_code(resp_text)
+        if _type == "Bash":
+            return code
+        elif _type == "Python":
+            self.save_code(code)
+            return code
+        return None
 
-    def validate_sol(self, resp: str):
+
+    def save_code(self, code: str, file_name="sol.py"):
+        with open(os.path.join(self.sol_path, file_name), 'w') as f:
+            f.write(code)
+
+    def validate_sol(self, resp: str, cmd: str):
 
         print(self.log.assistant_message(f"Checking solution..."))
         # print("============================== CHECKING SOLUTION ==============================")
@@ -119,7 +166,7 @@ class LocalMixtralTask:
         # os.chdir(self.sol_path)
         # subprocess.run(['chmod', "777", self.sol_path + "/*"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=5)
         try:
-            p = self.docker_tool.docker_exec("python sol.py",
+            p = self.docker_tool.docker_exec(cmd,
                                              f"/opt/exp/solutions/{self.chal_category}/\"{self.chal_name}\"")
             # p = subprocess.run(['python', "sol.py"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=5)
             res: str = str('\n' + p.stdout.decode("utf-8"))

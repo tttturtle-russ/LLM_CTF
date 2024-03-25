@@ -16,6 +16,7 @@ The description is:
 {description}
 \n
 Here is the following of extra infos either from decompiled code or source code:
+{extra_info}
 """
 
 PROMPT_PORT_INFO = """\

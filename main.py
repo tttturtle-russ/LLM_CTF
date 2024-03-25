@@ -6,7 +6,7 @@ import os
 import json
 import argparse
 from pathlib import Path
-
+from tqdm import tqdm
 
 EXPERIMENT_REPEAT = 10
 DEFAULT_PATH = Path(__file__).parent.resolve()
@@ -15,7 +15,9 @@ parser = argparse.ArgumentParser(description="use command line args to choose mo
 parser.add_argument('--model', '-m', help="specify model to use", required=True)
 parser.add_argument("--question", '-q', help="specify question relavent path", required=True)
 parser.add_argument("--prompt", '-p', help="sepcify prompt relavent path")
+parser.add_argument("--max_turn", '-t', help="how many turns each chllenge will take", default=10)
 args = parser.parse_args()
+
 def main(question_path, prompt_path, chal_config):
     
     os.chdir(DEFAULT_PATH)
@@ -43,11 +45,21 @@ def main(question_path, prompt_path, chal_config):
     except Exception as e:
         print(f"\033[91mRuntimeError: {e}")
         exit(1)
-    resp = task.task_prompt(prompt=prompt_path, use_file=False, append_msg="", template_prompt=True)
-    # print("============================== RESPONSE FROM MODEL ==============================")
-    # print(resp)
-    task.save_code(resp)
-    solved = task.validate_sol(resp)
+    resp = task.task_prompt(prompt=prompt_path, use_file=False, append_msg="", template_prompt=False)
+    for _ in tqdm(range(args.max_turn)):
+        # resp = task.task_prompt(prompt=prompt_path, use_file=False, append_msg="", template_prompt=False)
+        code = task.forward(resp)
+        if code is None:
+            continue
+        solved = task.validate_sol(resp, code)
+        if solved:
+            return True
+    # resp = task.task_prompt(prompt=prompt_path, use_file=False, append_msg="", template_prompt=True)
+    # # print("============================== RESPONSE FROM MODEL ==============================")
+    # # print(resp)
+    # code = task.forward()
+    #
+    # solved = task.validate_sol(resp, code)
     return solved
     
 if __name__ == "__main__":

@@ -17,7 +17,7 @@ class DockerHelper:
         # p = subprocess.run(['sudo', 'docker', 'run','--rm', '-it', '-v', '$PWD:/opt/exp', self.container, cmd], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=5)
         # res: str = str('\n' + p.stdout.decode("utf-8"))
         try:
-            cmd_list = f"sudo docker run --rm -it -v $PWD:/opt/exp {self.container} /bin/bash -c 'cd {sol_path}&&{cmd}'"
+            cmd_list = f"docker run --rm -it -v $PWD:/opt/exp {self.container} /bin/bash -c 'cd {sol_path}&&{cmd}'"
             print(cmd_list)
             p = subprocess.run(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=5, shell=True)
             # res: str = str('\n' + p.stdout.decode("utf-8"))
