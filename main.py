@@ -52,9 +52,9 @@ def main(question_path, prompt_path, chal_config):
     for i in tqdm(range(args.max_turn)):
         print(f"test: {i} turn")
         # resp = task.task_prompt(prompt=prompt_path, use_file=False, append_msg="", template_prompt=False)
-        resp, code = task.forward(resp)
+        resp, code, shell = task.forward(resp)
         print(f"test: {i} turn, code is \n{code}")
-        solved = task.validate_sol(resp, code)
+        solved = task.validate_sol(resp, code, shell=shell)
         print(f"test: {i} turn, is solved {solved}")
         if solved:
             return True

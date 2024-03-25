@@ -144,11 +144,11 @@ class LocalMixtralTask:
             print(self.log.assistant_message(resp_text))
             code, _type = self._extract_code(resp_text)
         if _type == "Bash":
-            return resp, code
+            return resp, code, True
         elif _type == "Python":
             self.save_code(code)
-            return resp, code
-        return None, None
+            return resp, code, False
+        return None, None, None
 
 
     def save_code(self, code: str, file_name="sol.py"):
@@ -156,7 +156,7 @@ class LocalMixtralTask:
         with open(os.path.join(self.sol_path, file_name), 'w') as f:
             f.write(code)
 
-    def validate_sol(self, resp: str, cmd: str):
+    def validate_sol(self, resp: str, cmd: str, shell=False):
 
         print(self.log.assistant_message(f"Checking solution..."))
         # print("============================== CHECKING SOLUTION ==============================")
@@ -168,6 +168,9 @@ class LocalMixtralTask:
         # os.chdir(self.sol_path)
         # subprocess.run(['chmod', "777", self.sol_path + "/*"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=5)
         try:
+            if not shell:
+                # if not shell, then python
+                cmd = "python sol.py"
             p = self.docker_tool.docker_exec(cmd,
                                              f"/opt/exp/solutions/{self.chal_category}/\"{self.chal_name}\"")
             # p = subprocess.run(['python', "sol.py"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=5)
