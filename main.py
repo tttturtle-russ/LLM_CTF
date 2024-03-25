@@ -11,15 +11,16 @@ from tqdm import tqdm
 EXPERIMENT_REPEAT = 10
 DEFAULT_PATH = Path(__file__).parent.resolve()
 
-parser = argparse.ArgumentParser(description="use command line args to choose model and challenge type", formatter_class=argparse.RawTextHelpFormatter)
+parser = argparse.ArgumentParser(description="use command line args to choose model and challenge type",
+                                 formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument('--model', '-m', help="specify model to use", required=True)
 parser.add_argument("--question", '-q', help="specify question relavent path", required=True)
 parser.add_argument("--prompt", '-p', help="sepcify prompt relavent path")
 parser.add_argument("--max_turn", '-t', help="how many turns each chllenge will take", default=10)
 args = parser.parse_args()
 
+
 def main(question_path, prompt_path, chal_config):
-    
     os.chdir(DEFAULT_PATH)
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
     task = None
@@ -46,12 +47,16 @@ def main(question_path, prompt_path, chal_config):
         print(f"\033[91mRuntimeError: {e}")
         exit(1)
     resp = task.task_prompt(prompt=prompt_path, use_file=False, append_msg="", template_prompt=False)
-    for _ in tqdm(range(args.max_turn)):
+    solved = False
+    for i in tqdm(range(args.max_turn)):
+        print(f"test: {i} turn")
         # resp = task.task_prompt(prompt=prompt_path, use_file=False, append_msg="", template_prompt=False)
-        code = task.forward(resp)
+        resp, code = task.forward(resp)
+        print(f"test: {i} turn, code is \n{code}")
         if code is None:
             continue
         solved = task.validate_sol(resp, code)
+        print(f"test: {i} turn, is solved {solved}")
         if solved:
             return True
     # resp = task.task_prompt(prompt=prompt_path, use_file=False, append_msg="", template_prompt=True)
@@ -61,7 +66,8 @@ def main(question_path, prompt_path, chal_config):
     #
     # solved = task.validate_sol(resp, code)
     return solved
-    
+
+
 if __name__ == "__main__":
     # p = subprocess.run("sudo docker run --rm -it -v $PWD:/opt/exp ctfenv /bin/bash -c \'cd /opt/exp/solutions/rev/\"Rebug 1\"&&python sol.py\'", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=5, shell=True)
 
@@ -69,7 +75,7 @@ if __name__ == "__main__":
     # if len(sys.argv) != 3:
     #     print("Usage: python script.py <question_path> <prompt_path>")
     #     sys.exit(1)
-        
+
     question_path = args.question
     prompt_path = args.prompt
     try:
@@ -87,8 +93,8 @@ if __name__ == "__main__":
                 success += 1
         except Exception as e:
             print(e)
-    
-    with open("results.txt", "a+") as f: 
+
+    with open("results.txt", "a+") as f:
         res = f"Challenge: {chal_name}, Success: {success}/{EXPERIMENT_REPEAT}\n"
         f.write(res)
         print(res)

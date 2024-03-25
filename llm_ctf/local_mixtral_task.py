@@ -135,19 +135,20 @@ class LocalMixtralTask:
         print(self.log.assistant_message(resp))
         return resp
 
-    def forward(self):
+    def forward(self, resp_text):
+        print("test: forward")
         code, _type = self._extract_code(resp_text)
         while _type is None and code is None:
             print(self.log.user_message("No Bash or Python code was found. Regenerating response now"))
             resp = self.model.generate("", retry=True)
-            print(self.log.assistant_message(resp))
+            print(self.log.assistant_message(resp_text))
             code, _type = self._extract_code(resp_text)
         if _type == "Bash":
-            return code
+            return resp, code
         elif _type == "Python":
             self.save_code(code)
-            return code
-        return None
+            return resp, code
+        return None, None
 
 
     def save_code(self, code: str, file_name="sol.py"):
