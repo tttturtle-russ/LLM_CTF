@@ -47,16 +47,31 @@ def main(question_path, prompt_path, chal_config):
         print(f"\033[91mRuntimeError: {e}")
         exit(1)
     print("test: start task_prompt")
-    resp = task.task_prompt(prompt=prompt_path, use_file=False, append_msg="", template_prompt=True)
-    solved = False
-    for i in tqdm(range(args.max_turn)):
-        print(f"test: {i} turn")
+    # prompt = task.task_prompt(prompt=prompt_path, use_file=False, append_msg="", template_prompt=True)
+    result = False
+    retry = False
+    error = False
+    observation = ""
+    for ii in tqdm(range(args.max_turn)):
+        print(f"test: {ii} turn")
         # resp = task.task_prompt(prompt=prompt_path, use_file=False, append_msg="", template_prompt=False)
-        resp, code, shell = task.forward(resp)
-        print(f"test: {i} turn, code is \n{code}")
-        solved = task.validate_sol(resp, code, shell=shell)
-        print(f"test: {i} turn, is solved {solved}")
-        if solved:
+        resp, code, shell = task.forward(observation, retry=retry, error=error)
+        if resp is None and code is None and shell is None:
+            # when response don't contain any code, retry is needed while not a error
+            retry = True
+            error = False
+            continue
+        print(f"test: {ii} turn, code is \n{code}")
+        result = task.validate_sol(resp, code, shell=shell)
+        if isinstance(result, str):
+            observation = result
+            retry = True
+            error = True
+            continue
+        print(f"test: {ii} turn, is solved {result}")
+        error = False
+        retry = False
+        if result:
             return True
     # resp = task.task_prompt(prompt=prompt_path, use_file=False, append_msg="", template_prompt=True)
     # # print("============================== RESPONSE FROM MODEL ==============================")
@@ -64,7 +79,7 @@ def main(question_path, prompt_path, chal_config):
     # code = task.forward()
     #
     # solved = task.validate_sol(resp, code)
-    return solved
+    return result
 
 
 if __name__ == "__main__":
