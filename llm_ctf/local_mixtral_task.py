@@ -200,6 +200,8 @@ class LocalMixtralTask:
 
     def save_code(self, code: str, file_name="sol.py"):
         print(self.log.assistant_message(f"Saving python code to {file_name}..."))
+        print(f"code is {code}")
+        print(f"file is {os.path.join(self.sol_path, file_name)}")
         with open(os.path.join(self.sol_path, file_name), 'w') as f:
             f.write(code)
 

@@ -53,7 +53,6 @@ def main(question_path, prompt_path, chal_config):
     error = False
     observation = ""
     for ii in tqdm(range(args.max_turn)):
-        print(f"test: {ii} turn")
         # resp = task.task_prompt(prompt=prompt_path, use_file=False, append_msg="", template_prompt=False)
         resp, code, shell = task.forward(observation, retry=retry, error=error)
         if resp is None and code is None and shell is None:
@@ -61,7 +60,6 @@ def main(question_path, prompt_path, chal_config):
             retry = True
             error = False
             continue
-        print(f"test: {ii} turn, code is \n{code}")
         result = task.validate_sol(resp, code, shell=shell)
         if isinstance(result, str):
             observation = result
