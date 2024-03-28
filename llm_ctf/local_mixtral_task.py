@@ -11,7 +11,7 @@ import logging
 QUERY_MAP = {
     # normal query
     "query": """Your previous answer is not right, please check the problem and regenerate a new response to solve the 
-problem""",
+problem.""",
     # if response don't contain any code or command
     "retry": """No python or bash code was found in your last response.
 Your response should be a bash command or python code. Format your response as follows:
@@ -104,14 +104,12 @@ class LocalMixtralTask:
         matches = re.findall(python_pattern, text, re.DOTALL)
         if matches:
             print("Python solver found:")
-            print(matches[0].strip())
             return matches[0].strip(), "Python"
 
         bash_pattern = r'```bash\n(.*?)```'
         matches = re.findall(bash_pattern, text, re.DOTALL)
         if matches:
             print("Bash solver found:")
-            print(matches[0].strip())
             return matches[0].strip(), "Bash"
 
         print("No bash solver or python solver found in response")
