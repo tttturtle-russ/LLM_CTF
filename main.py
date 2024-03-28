@@ -22,7 +22,7 @@ args = parser.parse_args()
 
 def main(question_path, prompt_path, chal_config):
     os.chdir(DEFAULT_PATH)
-    os.environ["TOKENIZERS_PARALLELISM"] = "false"
+    #os.environ["TOKENIZERS_PARALLELISM"] = "false"
     task = None
     try:
         if args.model == "Mixtral":

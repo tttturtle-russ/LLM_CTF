@@ -225,7 +225,6 @@ class LocalMixtralTask:
             p = self.docker_tool.docker_exec(cmd,
                                              f"/opt/exp/solutions/{self.chal_category}/\"{self.chal_name}\"")
             # p = subprocess.run(['python', "sol.py"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=5)
-            time.sleep(2)
             res: str = str('\n' + p.stdout.decode("utf-8"))
             # error handle
             # python code execute incorrect or command return a none-zore value
