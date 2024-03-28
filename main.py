@@ -22,7 +22,7 @@ args = parser.parse_args()
 
 def main(question_path, prompt_path, chal_config):
     os.chdir(DEFAULT_PATH)
-    #os.environ["TOKENIZERS_PARALLELISM"] = "false"
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
     task = None
     try:
         if args.model == "Mixtral":
@@ -46,7 +46,6 @@ def main(question_path, prompt_path, chal_config):
     except Exception as e:
         print(f"\033[91mRuntimeError: {e}")
         exit(1)
-    print("test: start task_prompt")
     # prompt = task.task_prompt(prompt=prompt_path, use_file=False, append_msg="", template_prompt=True)
     result = False
     retry = False
@@ -54,7 +53,7 @@ def main(question_path, prompt_path, chal_config):
     observation = ""
     for ii in tqdm(range(args.max_turn)):
         # resp = task.task_prompt(prompt=prompt_path, use_file=False, append_msg="", template_prompt=False)
-        resp, code, shell = task.forward(observation, retry=retry, error=error)
+        resp, code, shell = task.forward(observation,prompt_path=prompt_path, retry=retry, error=error)
         if resp is None and code is None and shell is None:
             # when response don't contain any code, retry is needed while not a error
             retry = True

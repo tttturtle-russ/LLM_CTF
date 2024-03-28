@@ -8,9 +8,11 @@ from .models.deepseek import DeepSeek
 from .prompt import *
 import logging
 
+
 class DeepSeekTask:
 
     def __init__(self, question_path: str, task_config: dict):
+        self.prompt = None
         self.log = Status()
         self.config = task_config
         self.chal_name = self.config["name"]
@@ -82,37 +84,74 @@ class DeepSeekTask:
         else:
             return "Python code block not found."
 
-    def task_prompt(self, prompt, use_file=False, append_msg="", template_prompt=True):
-        if use_file:
-            with open(prompt, 'r') as f:
-                prompt = f.read()
+    def _extract_code(self, text):
+        print(self.log.assistant_message("Format solver"))
+        python_pattern = r'```python\n(.*?)```'
+        matches = re.findall(python_pattern, text, re.DOTALL)
+        if matches:
+            print("Python solver found:")
+            return matches[0].strip(), "Python"
 
-        if template_prompt:
-            prompt = PROMPT_INIT.format(category=self.chal_category,
-                                        category_description=category_friendly[self.chal_category],
-                                        name=self.chal_name, files=",".join(self.files), description=self.description,
-                                        extra_info=self.extra_info)
-            print("test: finish prompt")
-            if self.port:
-                if self.proto == "nc":
-                    prompt += PROMPT_NC_INFO.format(container_image=self.docker_container, challenge_port=self.port)
-                else:
-                    prompt += PROMPT_PORT_INFO.format(container_image=self.docker_container, challenge_port=self.port)
-        print("")
-        print(self.log.user_message(prompt + '\n' + "\n".join(self.extra_info) + append_msg))
-        resp = self.model.generate(prompt + "\n".join(self.extra_info), append_msg=append_msg)
-        print(self.log.assistant_message(resp))
-        return resp
+        bash_pattern = r'```bash\n(.*?)```'
+        matches = re.findall(bash_pattern, text, re.DOTALL)
+        if matches:
+            print("Bash solver found:")
+            return matches[0].strip(), "Bash"
 
-    def forward(self):
-        ...
+        print("No bash solver or python solver found in response")
+        return None, None
+
+    def query_string(self, query, retry=False, error=False):
+        if error:
+            return QUERY_MAP["error"].format(query=query)
+        elif retry:
+            return QUERY_MAP["retry"]
+        return QUERY_MAP["query"]
+
+    def forward(self, observation, append_msg="", prompt_path="", retry=False, error=False):
+        if self.prompt is None:
+            # in the first turn, init prompt
+            if prompt_path != "":
+                self.prompt = open(prompt_path, 'r').read()
+            else:
+                self.prompt = PROMPT_INIT.format(category=self.chal_category,
+                                                 category_description=category_friendly[self.chal_category],
+                                                 name=self.chal_name, files=",".join(self.files),
+                                                 description=self.description)
+            prompt = self.prompt
+            print(self.log.user_message(prompt + '\n' + '\n'.join(self.extra_info) + append_msg))
+            resp = self.model.generate(
+                prompt + '\n' + '\n'.join(self.extra_info),
+                append_msg=append_msg)
+            print(self.log.assistant_message(resp))
+        else:
+            # regular turn, get query string from TEMPLATE according to retry and error param
+            prompt = self.query_string(observation, retry=retry, error=error)
+            print(self.log.user_message(prompt + '\n' + append_msg))
+            resp = self.model.generate(
+                prompt + '\n' + append_msg,
+                append_msg=append_msg)
+            print(self.log.assistant_message(resp))
+        code, _type = self._extract_code(resp)
+        # while _type is None and code is None:
+        #     print(self.log.user_message("No Bash or Python code was found. Regenerating response now"))
+        #     resp = self.model.generate("", retry=True)
+        #     print(self.log.assistant_message(resp_text))
+        #     code, _type = self._extract_code(resp_text)
+
+        if _type == "Bash":
+            return resp, code, True
+        elif _type == "Python":
+            self.save_code(code)
+            return resp, code, False
+        return None, None, None
 
     def save_code(self, resp_text: str, file_name="sol.py"):
         code_snpt = self.extract_python_code(resp_text)
         with open(os.path.join(self.sol_path, file_name), 'w') as f:
             f.write(code_snpt)
 
-    def validate_sol(self, resp: str):
+    def validate_sol(self, resp: str, shell=False):
 
         print(self.log.assistant_message(f"Checking solution..."))
         # print("============================== CHECKING SOLUTION ==============================")
@@ -124,10 +163,14 @@ class DeepSeekTask:
         # os.chdir(self.sol_path)
         # subprocess.run(['chmod', "777", self.sol_path + "/*"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=5)
         try:
+            if not shell:
+                cmd = "python sol.py"
             p = self.docker_tool.docker_exec("python sol.py",
                                              f"/opt/exp/solutions/{self.chal_category}/\"{self.chal_name}\"")
             # p = subprocess.run(['python', "sol.py"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=5)
             res: str = str('\n' + p.stdout.decode("utf-8"))
+            if "Traceback" in res or p.returncode != 0:
+                return res
         except Exception as e:
             print(f"Validation failed, solver cannot be executed or solver execution error, message shown below:")
             print(e)

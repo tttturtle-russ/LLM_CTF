@@ -10,30 +10,6 @@ from .models.local_mixtral import LocalMixtral
 from .prompt import *
 import logging
 
-QUERY_MAP = {
-    # normal query
-    "query": """Your previous answer is not right, please check the problem and regenerate a new response to solve the 
-problem.""",
-    # if response don't contain any code or command
-    "retry": """No python or bash code was found in your last response.
-Your response should be a bash command or python code. Format your response as follows:
-```bash
-Your bash command here
-```
-or
-```python
-Your python code here
-```        
-""",
-    # code or command is wrong
-    "error": """Your python code or bash command is wrong, here is the error message
-```
-{query}
-```
-Please correct this python code and generate right python code or bash command.
-""",
-}
-
 
 class LocalMixtralTask:
 
@@ -165,10 +141,13 @@ class LocalMixtralTask:
             return QUERY_MAP["retry"]
         return QUERY_MAP["query"]
 
-    def forward(self, observation, append_msg="", retry=False, error=False):
+    def forward(self, observation, append_msg="", prompt_path="",retry=False, error=False):
         if self.prompt is None:
             # in the first turn, init prompt
-            self.prompt = PROMPT_INIT.format(category=self.chal_category,
+            if prompt_path != "":
+                self.prompt = open(prompt_path, 'r').read()
+            else:
+                self.prompt = PROMPT_INIT.format(category=self.chal_category,
                                              category_description=category_friendly[self.chal_category],
                                              name=self.chal_name, files=",".join(self.files),
                                              description=self.description)
@@ -202,8 +181,6 @@ class LocalMixtralTask:
 
     def save_code(self, code: str, file_name="sol.py"):
         print(self.log.assistant_message(f"Saving python code to {file_name}..."))
-        print(f"code is {code}")
-        print(f"file is {os.path.join(self.sol_path, file_name)}")
         with open(os.path.join(self.sol_path, file_name), 'w') as f:
             f.write(code)
 
