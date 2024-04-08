@@ -49,11 +49,13 @@ class LocalMixtralTask:
         print(self.files)
         print(self.sol_path)
         for i in self.files:
+            print(os.path.join(self.sol_path, i))
             with open(os.path.join(self.sol_path, i), "r") as f:
                 try:
                     self.extra_info.append(i + ":\n" + f.read())
                 except Exception as e:
-                    continue
+                    print(e.__traceback__)
+                    print(e)
         if self.decomp_file:
             self.extra_info.append(self.ghidra._read_dump()["decomp"])
 
