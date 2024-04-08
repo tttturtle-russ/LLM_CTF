@@ -2,7 +2,7 @@ import re
 import os
 import shutil
 import time
-
+from typing import Optional
 from .utils.ctflogging import Status
 from .utils.ghidra_call import Ghidra_Call
 from .utils.dockertool import DockerHelper
@@ -142,12 +142,12 @@ class LocalMixtralTask:
             return QUERY_MAP["retry"]
         return QUERY_MAP["query"]
 
-    def forward(self, observation, append_msg="", prompt_path="", retry=False, error=False):
+    def forward(self, observation, prompt_path: Optional[str] = None, append_msg="", retry=False, error=False):
         print("forward")
         if self.prompt is None:
             print("prompt is None")
             # in the first turn, init prompt
-            if prompt_path != "":
+            if prompt_path is not None and prompt_path != "":
                 print("prompt_path is not empty")
                 self.prompt = open(prompt_path, 'r').read()
             else:
