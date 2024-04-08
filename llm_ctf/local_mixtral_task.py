@@ -45,9 +45,6 @@ class LocalMixtralTask:
         self.prompt = None
 
     def read_dir(self):
-        print("read dir")
-        print(self.files)
-        print(self.sol_path)
         for i in self.files:
             print(os.path.join(self.sol_path, i))
             with open(os.path.join(self.sol_path, i), "r") as f:
@@ -148,10 +145,13 @@ class LocalMixtralTask:
     def forward(self, observation, append_msg="", prompt_path="", retry=False, error=False):
         print("forward")
         if self.prompt is None:
+            print("prompt is None")
             # in the first turn, init prompt
             if prompt_path != "":
+                print("prompt_path is not empty")
                 self.prompt = open(prompt_path, 'r').read()
             else:
+                print("prompt_path is empty")
                 self.prompt = PROMPT_INIT.format(category=self.chal_category,
                                                  category_description=category_friendly[self.chal_category],
                                                  name=self.chal_name, files=",".join(self.files),
