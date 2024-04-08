@@ -46,6 +46,8 @@ class LocalMixtralTask:
 
     def read_dir(self):
         print("read dir")
+        print(self.files)
+        print(self.sol_path)
         for i in self.files:
             with open(os.path.join(self.sol_path, i), "r") as f:
                 try:
