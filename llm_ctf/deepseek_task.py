@@ -36,11 +36,13 @@ class DeepSeekTask:
         if self.decomp_file:
             self.ghidra = Ghidra_Call(self.sol_path, self.decomp_file)
             self.decomp()
+            print("decomp done")
         self.extra_info = []
         self.read_dir()
         self.docker_container = self.config.get("container_image", None)
         self.player_docker = "ctfenv"
         self.docker_tool = DockerHelper(self.player_docker)
+        print("init done")
 
     def read_dir(self):
         for i in self.files:
