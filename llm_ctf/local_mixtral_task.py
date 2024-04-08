@@ -45,6 +45,7 @@ class LocalMixtralTask:
         self.prompt = None
 
     def read_dir(self):
+        print("read dir")
         for i in self.files:
             with open(os.path.join(self.sol_path, i), "r") as f:
                 try:
@@ -141,16 +142,16 @@ class LocalMixtralTask:
             return QUERY_MAP["retry"]
         return QUERY_MAP["query"]
 
-    def forward(self, observation, append_msg="", prompt_path="",retry=False, error=False):
+    def forward(self, observation, append_msg="", prompt_path="", retry=False, error=False):
         if self.prompt is None:
             # in the first turn, init prompt
             if prompt_path != "":
                 self.prompt = open(prompt_path, 'r').read()
             else:
                 self.prompt = PROMPT_INIT.format(category=self.chal_category,
-                                             category_description=category_friendly[self.chal_category],
-                                             name=self.chal_name, files=",".join(self.files),
-                                             description=self.description)
+                                                 category_description=category_friendly[self.chal_category],
+                                                 name=self.chal_name, files=",".join(self.files),
+                                                 description=self.description)
             prompt = self.prompt
             print(self.log.user_message(prompt + '\n' + '\n'.join(self.extra_info) + append_msg))
             resp = self.model.generate(

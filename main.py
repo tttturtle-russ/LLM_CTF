@@ -52,8 +52,8 @@ def main(question_path, prompt_path, chal_config):
     error = False
     observation = ""
     for ii in tqdm(range(args.max_turn)):
-        # resp = task.task_prompt(prompt=prompt_path, use_file=False, append_msg="", template_prompt=False)
-        resp, code, shell = task.forward(observation,prompt_path=prompt_path, retry=retry, error=error)
+        print(f"test: {ii} turn")
+        resp, code, shell = task.forward(observation, prompt_path=prompt_path, retry=retry, error=error)
         if resp is None and code is None and shell is None:
             # when response don't contain any code, retry is needed while not a error
             retry = True
