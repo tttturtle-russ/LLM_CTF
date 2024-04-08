@@ -53,13 +53,10 @@ class LocalMixtralTask:
             with open(os.path.join(self.sol_path, i), "r") as f:
                 try:
                     self.extra_info.append(i + ":\n" + f.read())
-                except Exception as e:
-                    print(f"extra info: {self.extra_info}")
-                    print(e.__traceback__)
-                    print(e)
+                except Exception:
+                    continue
         if self.decomp_file:
             self.extra_info.append(self.ghidra._read_dump()["decomp"])
-            print(f"extra decomp info: {self.extra_info}")
 
     def _clean_sol(self):
         if os.path.exists(self.sol_path):
@@ -149,6 +146,7 @@ class LocalMixtralTask:
         return QUERY_MAP["query"]
 
     def forward(self, observation, append_msg="", prompt_path="", retry=False, error=False):
+        print("forward")
         if self.prompt is None:
             # in the first turn, init prompt
             if prompt_path != "":
