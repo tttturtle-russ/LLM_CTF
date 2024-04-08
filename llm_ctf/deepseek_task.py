@@ -6,6 +6,7 @@ from .utils.ghidra_call import Ghidra_Call
 from .utils.dockertool import DockerHelper
 from .models.deepseek import DeepSeek
 from .prompt import *
+from typing import Optional
 import logging
 
 
@@ -110,11 +111,11 @@ class DeepSeekTask:
             return QUERY_MAP["retry"]
         return QUERY_MAP["query"]
 
-    def forward(self, observation, append_msg="", prompt_path="", retry=False, error=False):
+    def forward(self, observation, prompt_path: Optional[str] = None, append_msg="", retry=False, error=False):
         if self.prompt is None:
             print(self.log.assistant_message("Init prompt..."))
             # in the first turn, init prompt
-            if prompt_path != "":
+            if prompt_path is not None and os.path.exists(prompt_path):
                 self.prompt = open(prompt_path, 'r').read()
             else:
                 self.prompt = PROMPT_INIT.format(category=self.chal_category,
