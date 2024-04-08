@@ -50,7 +50,7 @@ class LocalMixtralTask:
         print(self.sol_path)
         for i in self.files:
             print(os.path.join(self.sol_path, i))
-            with open(os.path.join(self.sol_path, i), "r") as f:
+            with open(os.path.join(self.sol_path, i), "rb") as f:
                 try:
                     self.extra_info.append(i + ":\n" + f.read())
                 except Exception as e:
