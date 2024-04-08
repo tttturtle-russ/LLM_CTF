@@ -112,6 +112,7 @@ class DeepSeekTask:
 
     def forward(self, observation, append_msg="", prompt_path="", retry=False, error=False):
         if self.prompt is None:
+            print(self.log.assistant_message("Init prompt..."))
             # in the first turn, init prompt
             if prompt_path != "":
                 self.prompt = open(prompt_path, 'r').read()

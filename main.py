@@ -99,7 +99,6 @@ if __name__ == "__main__":
     success = 0
     chal_name = chal_json["name"]
     for i in range(EXPERIMENT_REPEAT):
-        print("test: expr")
         try:
             if main(question_path, prompt_path, chal_json):
                 success += 1
