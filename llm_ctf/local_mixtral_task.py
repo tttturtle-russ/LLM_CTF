@@ -156,6 +156,7 @@ class LocalMixtralTask:
                                                  category_description=category_friendly[self.chal_category],
                                                  name=self.chal_name, files=",".join(self.files),
                                                  description=self.description)
+            print(self.prompt)
             prompt = self.prompt
             print(self.log.user_message(prompt + '\n' + '\n'.join(self.extra_info) + append_msg))
             resp = self.model.generate(
