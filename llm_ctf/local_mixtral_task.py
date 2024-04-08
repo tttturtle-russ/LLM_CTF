@@ -52,7 +52,7 @@ class LocalMixtralTask:
             print(os.path.join(self.sol_path, i))
             with open(os.path.join(self.sol_path, i), "rb") as f:
                 try:
-                    self.extra_info.append(i + ":\n" + f.read())
+                    self.extra_info.append(i + ":\n" + f.read().decode())
                 except Exception as e:
                     print(e.__traceback__)
                     print(e)
