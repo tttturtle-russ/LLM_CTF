@@ -112,8 +112,8 @@ class DeepSeekTask:
         return QUERY_MAP["query"]
 
     def forward(self, observation, prompt_path: Optional[str] = None, append_msg="", retry=False, error=False):
+        print(self.log.assistant_message("Init prompt..."))
         if self.prompt is None:
-            print(self.log.assistant_message("Init prompt..."))
             # in the first turn, init prompt
             if prompt_path is not None and os.path.exists(prompt_path):
                 self.prompt = open(prompt_path, 'r').read()
