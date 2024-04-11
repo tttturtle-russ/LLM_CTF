@@ -172,11 +172,6 @@ class LocalMixtralTask:
                 append_msg=append_msg)
             print(self.log.assistant_message(resp))
         code, _type = self._extract_code(resp)
-        # while _type is None and code is None:
-        #     print(self.log.user_message("No Bash or Python code was found. Regenerating response now"))
-        #     resp = self.model.generate("", retry=True)
-        #     print(self.log.assistant_message(resp_text))
-        #     code, _type = self._extract_code(resp_text)
 
         if _type == "Bash":
             return resp, code, True

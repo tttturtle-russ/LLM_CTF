@@ -104,9 +104,9 @@ class DeepSeekTask:
         print("No bash solver or python solver found in response")
         return None, None
 
-    def query_string(self, query, retry=False, error=False):
+    def query_string(self, observation, retry=False, error=False):
         if error:
-            return QUERY_MAP["error"].format(query=query)
+            return QUERY_MAP["error"].format(query=observation)
         elif retry:
             return QUERY_MAP["retry"]
         return QUERY_MAP["query"]
@@ -158,14 +158,11 @@ class DeepSeekTask:
     def validate_sol(self, resp: str, shell=False):
 
         print(self.log.assistant_message(f"Checking solution..."))
-        # print("============================== CHECKING SOLUTION ==============================")
         if self.real_flag in resp:
             print(f"Validation succeeded with returned flag {self.real_flag} in answer")
             self.valid = True
             return self.valid
-        # print("============================== CHECKING FLAG IN SOLVER.PY ==============================")
-        # os.chdir(self.sol_path)
-        # subprocess.run(['chmod', "777", self.sol_path + "/*"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=5)
+
         try:
             if not shell:
                 cmd = "python sol.py"

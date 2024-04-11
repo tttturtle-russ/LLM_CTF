@@ -199,7 +199,7 @@ class CTFConversation:
         self.args = args
         self.chal = challenge
         self.messages = [
-            {"role": "system", "content": SYSTEM_MESSAGE},
+            # {"role": "system", "content": SYSTEM_MESSAGE},
         ]
         self.tool_choice = "auto"
         self.volume = self.chal.tmpdir
