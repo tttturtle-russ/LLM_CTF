@@ -17,7 +17,8 @@ MODELS = [
     "gpt-4-1106-preview",
     "gpt-4-0125-preview",
     "gpt-3.5-turbo-1106",
-    "mistralai/Mistral-7B-Instruct-v0.2"
+    "mistralai/Mistral-7B-Instruct-v0.2",
+    "deepseek-ai/deepseek-coder-6.7b-base"
 ]
 # MODEL = "gpt-4-1106-preview"
 # OPENAI_API_KEY = open(os.path.expanduser("~/.openai/api_key"), "r").read().strip()
@@ -199,7 +200,7 @@ class CTFConversation:
         self.args = args
         self.chal = challenge
         self.messages = [
-            # {"role": "system", "content": SYSTEM_MESSAGE},
+            {"role": "system", "content": SYSTEM_MESSAGE},
         ]
         self.tool_choice = "auto"
         self.volume = self.chal.tmpdir

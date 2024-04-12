@@ -12,3 +12,4 @@ class DeepSeek:
         self.tokenizer = AutoTokenizer.from_pretrained(self.id)
 
     def generate(self):
+        ...
