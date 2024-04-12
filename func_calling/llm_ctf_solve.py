@@ -191,7 +191,7 @@ format for this CTF is csawctf{...}.
 
 You have access to a Linux container environment with a shell and \
 a live network environment that has access to the CTF challenge \
-server (if applicable).\
+server (if applicable).\n
 """
 
 
@@ -200,7 +200,7 @@ class CTFConversation:
         self.args = args
         self.chal = challenge
         self.messages = [
-            {"role": "system", "content": SYSTEM_MESSAGE},
+            # {"role": "system", "content": SYSTEM_MESSAGE},
         ]
         self.tool_choice = "auto"
         self.volume = self.chal.tmpdir
@@ -388,7 +388,7 @@ def main():
     challenge_json = Path(args.challenge_json).resolve()
     with CTFChallenge(challenge_json, args) as chal, \
             CTFConversation(chal, args) as convo:
-        next_msg = chal.prompt
+        next_msg = SYSTEM_MESSAGE + chal.prompt
         try:
             while True:
                 for resp in convo.run_conversation_step(next_msg):
