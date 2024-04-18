@@ -8,11 +8,13 @@ from ctflogging import status
 from pathlib import Path
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from llm_ctf_solve import CTFChallenge
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
 GHIDRA = SCRIPT_DIR / 'ghidra_11.0_PUBLIC/support/analyzeHeadless'
+
 
 class Tool:
     def __init__(self, schema):
@@ -49,6 +51,7 @@ class Tool:
     def __repr__(self):
         return f"<Tool {self.name}>"
 
+
 COMMAND_EXEC_TOOL = {
     "type": "function",
     "function": {
@@ -70,6 +73,8 @@ COMMAND_EXEC_TOOL = {
         },
     },
 }
+
+
 class CommandExec(Tool):
     def __init__(self, challenge: "CTFChallenge"):
         super().__init__(COMMAND_EXEC_TOOL)
@@ -90,10 +95,10 @@ class CommandExec(Tool):
             volumes = []
         subprocess.run(
             ['docker', 'run'] + \
-                volumes + \
-                ['--network', self.network] + \
-                ['--platform', 'linux/amd64', '-d', '--rm'] + \
-                ['--name', self.container_name, self.container_image],
+            volumes + \
+            ['--network', self.network] + \
+            ['--platform', 'linux/amd64', '-d', '--rm'] + \
+            ['--name', self.container_name, self.container_image],
             check=True, capture_output=True,
         )
 
@@ -129,20 +134,38 @@ class CommandExec(Tool):
             )
             out = self._clean(p.stdout)
             err = self._clean(p.stderr)
+            if p.returncode != 0:
+                return {"stdout": out, "stderr": err, "returncode": p.returncode, "timed_out": False, "error": {
+                    "message": f"Command failed with return code {p.returncode} and showed the following error: {err}",
+                    "tool": "run_command"
+                }}
             return {"stdout": out, "stderr": err, "returncode": p.returncode, "timed_out": False}
         except subprocess.TimeoutExpired as e:
             out = self._clean(e.stdout)
             err = self._clean(e.stderr)
-            return {"stdout": out, "stderr": err, "returncode": None, "timed_out": True}
+            return {"stdout": out, "stderr": err, "returncode": None, "timed_out": True, "error": {
+                "message": f"Command timed out after {timeout} seconds",
+                "tool": "run_command"
+            }
+                    }
         except subprocess.CalledProcessError as e:
             out = self._clean(e.stdout)
             err = self._clean(e.stderr)
-            return {"stdout": out, "stderr": err, "returncode": e.returncode, "timed_out": False}
+            return {"stdout": out, "stderr": err, "returncode": e.returncode, "timed_out": False, "error": {
+                "message": f"Command failed to with returncode {e.returncode} and showed the following error: {err}",
+                "tool": "run_command"
+            }
+                    }
 
     def __call__(self, command, timeout=10):
         if command is None:
-            return {"error": "No command provided"}
+            return {"error": {
+                "message": "No command provided",
+                "tool": "run_command"
+            }
+            }
         return self.run_cmd(command, timeout)
+
 
 CHECKFLAG_TOOL = {
     "type": "function",
@@ -161,6 +184,8 @@ CHECKFLAG_TOOL = {
         },
     },
 }
+
+
 class CheckFlag(Tool):
     def __init__(self, challenge: "CTFChallenge"):
         super().__init__(CHECKFLAG_TOOL)
@@ -169,7 +194,11 @@ class CheckFlag(Tool):
 
     def __call__(self, flag=None):
         if flag is None:
-            return {"error": "No flag provided"}
+            return {"error": {
+                "message": "No flag provided",
+                "tool": "checkflag"
+            }
+            }
         status.print(f"Checking flag:")
         status.print(f"  Provided: [blue]{flag}[/blue]", markup=True)
         status.print(f"    Actual: [green]{self.real_flag}[/green]", markup=True)
@@ -180,6 +209,7 @@ class CheckFlag(Tool):
         else:
             status.print(f"[red bold]Incorrect flag.[/red bold]", markup=True)
             return {"correct": False}
+
 
 CREATEFILE_TOOL = {
     "type": "function",
@@ -206,6 +236,8 @@ CREATEFILE_TOOL = {
         },
     },
 }
+
+
 class CreateFile(Tool):
     def __init__(self, challenge: "CTFChallenge"):
         super().__init__(CREATEFILE_TOOL)
@@ -214,9 +246,17 @@ class CreateFile(Tool):
 
     def __call__(self, path=None, contents=None, decode_escapes=None):
         if path is None:
-            return {"error": "No path provided"}
+            return {"error": {
+                "message": "No path provided",
+                "tool": "createfile"
+            }
+            }
         if contents is None:
-            return {"error": "No contents provided"}
+            return {"error": {
+                "message": "No contents provided",
+                "tool": "createfile"
+            }
+            }
         if decode_escapes is None:
             decode_escapes = False
         return self.createfile(path, contents)
@@ -235,7 +275,12 @@ class CreateFile(Tool):
             try:
                 contents = bytes(contents, 'utf-8').decode('unicode_escape').encode('latin-1')
             except UnicodeDecodeError as e:
-                return {"error": f"Invalid escape sequence in contents: {e}"}
+                return {"error": {
+                    "message": f"Invalid escape sequence in contents: {e}",
+                    "tool": "createfile"
+                }
+                }
+
         else:
             contents = contents.encode()
         path = Path(path)
@@ -260,7 +305,11 @@ class CreateFile(Tool):
                 )
                 return {"success": True, "path": path}
             except subprocess.CalledProcessError as e:
-                return {"error": f"Error copying file into container: {e.stderr.decode('utf-8', errors='backslashreplace')}"}
+                return {"error": {
+                    "message": f"Error copying file into container: {e.stderr.decode('utf-8', errors='backslashreplace')}",
+                    "tool": "createfile"}
+                }
+
 
 DECOMPILE_TOOL = {
     "type": "function",
@@ -283,6 +332,8 @@ DECOMPILE_TOOL = {
         },
     },
 }
+
+
 class Decompile(Tool):
     def __init__(self, challenge: "CTFChallenge"):
         super().__init__(DECOMPILE_TOOL)
@@ -291,7 +342,11 @@ class Decompile(Tool):
 
     def __call__(self, binary=None, function=None):
         if binary is None:
-            return {"error": "No binary provided"}
+            return {"error": {
+                "message": f"No {binary} provided",
+                "tool": "decompile_function"
+            }
+            }
         if function is None:
             function = "main"
         return self.decompile(binary, function)
@@ -306,14 +361,21 @@ class Decompile(Tool):
                 self._decomp_cache[basename] = json.loads(decomp_output.read_text())
             else:
                 if not self.run_ghidra(basename, decomp_output):
-                    return {"error": f"Decompilation for {binary} not available"}
+                    return {"error": {
+                        "message": f"Decompilation for {binary} not available",
+                        "tool": "decompile_function", }
+                    }
                 self._decomp_cache[basename] = json.loads(decomp_output.read_text())
         if function not in self._decomp_cache[basename]:
             # If they're trying to find main, try again with _start instead
             if function == "main":
                 return self.decompile(binary, "_start")
             else:
-                return {"error": f"Function {function} not found in {binary}"}
+                return {"error": {
+                    "message": f"Function {function} not found in {binary}",
+                    "tool": "decompile_function"
+                }
+                }
         return {"decompilation": self._decomp_cache[basename][function]}
 
     def run_ghidra(self, binary, output):
@@ -332,6 +394,7 @@ class Decompile(Tool):
                 check=False, capture_output=True,
             )
             return output.exists()
+
 
 DISASSEMBLE_TOOL = {
     "type": "function",
@@ -355,8 +418,10 @@ DISASSEMBLE_TOOL = {
     },
 }
 
+
 class GiveUpException(Exception):
     pass
+
 
 class Disassemble(Tool):
     def __init__(self, challenge: "CTFChallenge"):
@@ -368,7 +433,10 @@ class Disassemble(Tool):
         if function is None:
             function = "main"
         if binary is None:
-            return {"error": "No binary provided"}
+            return {"error": {
+                "message": "No binary provided",
+                "tool": "disassemble_function", }
+            }
         return self.disassemble(binary, function)
 
     def disassemble(self, binary, function):
@@ -381,7 +449,11 @@ class Disassemble(Tool):
                 self._disasm_cache[basename] = json.loads(disasm_output.read_text())
             else:
                 if not self.run_ghidra(basename, disasm_output):
-                    return {"error": f"Disassembly for {binary} not available"}
+                    return {"error": {
+                        "message": f"Disassembly for {binary} not available",
+                        "tool": "disassemble_function"
+                    }
+                    }
                 self._disasm_cache[basename] = json.loads(disasm_output.read_text())
 
         if function not in self._disasm_cache[basename]:
@@ -389,7 +461,11 @@ class Disassemble(Tool):
             if function == "main":
                 return self.disassemble(binary, "_start")
             else:
-                return {"error": f"Function {function} not found in {binary}"}
+                return {"error": {
+                    "message": f"Function {function} not found in {binary}",
+                    "tool": "disassemble_function"
+                }
+                }
         return {"disassembly": self._disasm_cache[basename][function]}
 
     def run_ghidra(self, binary, output):
@@ -409,6 +485,7 @@ class Disassemble(Tool):
             )
             return output.exists()
 
+
 class GiveUp(Tool):
     def __init__(self, challenge: "CTFChallenge"):
         super().__init__(GIVEUP_TOOL)
@@ -416,8 +493,13 @@ class GiveUp(Tool):
 
     def __call__(self, confirm=None):
         if not confirm:
-            return {"error": "You must confirm that you want to give up"}
+            return {"error": {
+                "message": "You must confirm that you want to give up",
+                "tool": "give_up"
+            }
+            }
         raise GiveUpException()
+
 
 GIVEUP_TOOL = {
     "type": "function",
@@ -437,14 +519,14 @@ GIVEUP_TOOL = {
     },
 }
 
-DEFAULT_TOOLSET = [ CommandExec, CheckFlag, CreateFile, Decompile, Disassemble, GiveUp ]
+DEFAULT_TOOLSET = [CommandExec, CheckFlag, CreateFile, Decompile, Disassemble, GiveUp]
 
 # Predefined sets of tools for different categories
 TOOLSETS = {
     # No binaries in the misc, forensics, or crypto categories
-    "crypto": [ CommandExec, CheckFlag, CreateFile, GiveUp ],
-    "misc": [ CommandExec, CheckFlag, CreateFile, GiveUp ],
-    "forensics": [ CommandExec, CheckFlag, CreateFile, GiveUp ],
+    "crypto": [CommandExec, CheckFlag, CreateFile, GiveUp],
+    "misc": [CommandExec, CheckFlag, CreateFile, GiveUp],
+    "forensics": [CommandExec, CheckFlag, CreateFile, GiveUp],
     "default": DEFAULT_TOOLSET,
 }
 
@@ -452,6 +534,7 @@ if __name__ == "__main__":
     import sys
     from argparse import Namespace
     from llm_ctf_solve import CTFChallenge
+
     dis = Disassemble(
         CTFChallenge(Path(sys.argv[1]), Namespace(container_image="ubuntu:20.04"))
     )
