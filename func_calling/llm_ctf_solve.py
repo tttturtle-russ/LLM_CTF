@@ -25,32 +25,6 @@ MODELS = [
     "deepseek-ai/deepseek-coder-6.7b-base"
 ]
 
-
-def run_controller():
-    subprocess.Popen(["python3", "-m", "fastchat.serve.controller", "--host", "127.0.0.1"])
-
-
-def run_model_worker(args):
-    subprocess.Popen(["python3", "-m", "fastchat.serve.vllm_worker", "--host", "127.0.0.1", "--controller-address",
-                    "http://127.0.0.1:21001", "--model-path", args.model, "--load-8bit"])
-
-
-def run_api_server():
-    subprocess.Popen(["python3", "-m", "fastchat.serve.openai_api_server", "--host", "127.0.0.1", "--controller-address",
-                    "http://127.0.0.1:21001", "--port", "8000"])
-
-
-# setup backend using fastchat and vllm
-controller_thread = threading.Thread(target=run_controller)
-model_worker_thread = threading.Thread(target=run_model_worker)
-api_server_thread = threading.Thread(target=run_api_server)
-controller_thread.start()
-print("Waiting for controller to start...")
-model_worker_thread.start()
-print("Waiting for model worker to start...")
-api_server_thread.start()
-print("Waiting for API server to start...")
-
 # MODEL = "gpt-4-1106-preview"
 # OPENAI_API_KEY = open(os.path.expanduser("~/.openai/api_key"), "r").read().strip()
 # client = OpenAI(

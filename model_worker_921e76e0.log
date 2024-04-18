@@ -1,0 +1,52 @@
+2024-04-19 02:23:52 | ERROR | stderr | config.json:   0%|                                                                                                                                                                             | 0.00/615 [00:00<?, ?B/s]
+2024-04-19 02:23:52 | ERROR | stderr | config.json: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 615/615 [00:00<00:00, 620kB/s]
+2024-04-19 02:23:52 | ERROR | stderr | 
+2024-04-19 02:23:53 | ERROR | stderr | tokenizer_config.json:   0%|                                                                                                                                                                   | 0.00/749 [00:00<?, ?B/s]
+2024-04-19 02:23:53 | ERROR | stderr | tokenizer_config.json: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 749/749 [00:00<00:00, 538kB/s]
+2024-04-19 02:23:53 | ERROR | stderr | 
+2024-04-19 02:23:53 | ERROR | stderr | tokenizer.model:   0%|                                                                                                                                                                        | 0.00/500k [00:00<?, ?B/s]
+2024-04-19 02:23:54 | ERROR | stderr | tokenizer.model: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 500k/500k [00:00<00:00, 2.47MB/s]
+2024-04-19 02:23:54 | ERROR | stderr | tokenizer.model: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 500k/500k [00:00<00:00, 2.46MB/s]
+2024-04-19 02:23:54 | ERROR | stderr | 
+2024-04-19 02:23:55 | ERROR | stderr | special_tokens_map.json:   0%|                                                                                                                                                                 | 0.00/438 [00:00<?, ?B/s]
+2024-04-19 02:23:55 | ERROR | stderr | special_tokens_map.json: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 438/438 [00:00<00:00, 584kB/s]
+2024-04-19 02:23:55 | ERROR | stderr | 
+2024-04-19 02:23:56 | ERROR | stderr | Traceback (most recent call last):
+2024-04-19 02:23:56 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/runpy.py", line 197, in _run_module_as_main
+2024-04-19 02:23:56 | ERROR | stderr |     return _run_code(code, main_globals, None,
+2024-04-19 02:23:56 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/runpy.py", line 87, in _run_code
+2024-04-19 02:23:56 | ERROR | stderr |     exec(code, run_globals)
+2024-04-19 02:23:56 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/fastchat/serve/vllm_worker.py", line 290, in <module>
+2024-04-19 02:23:56 | ERROR | stderr |     engine = AsyncLLMEngine.from_engine_args(engine_args)
+2024-04-19 02:23:56 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/engine/async_llm_engine.py", line 348, in from_engine_args
+2024-04-19 02:23:56 | ERROR | stderr |     engine = cls(
+2024-04-19 02:23:56 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/engine/async_llm_engine.py", line 311, in __init__
+2024-04-19 02:23:56 | ERROR | stderr |     self.engine = self._init_engine(*args, **kwargs)
+2024-04-19 02:23:56 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/engine/async_llm_engine.py", line 422, in _init_engine
+2024-04-19 02:23:56 | ERROR | stderr |     return engine_class(*args, **kwargs)
+2024-04-19 02:23:56 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/engine/llm_engine.py", line 110, in __init__
+2024-04-19 02:23:56 | ERROR | stderr |     self.model_executor = executor_class(model_config, cache_config,
+2024-04-19 02:23:56 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/executor/gpu_executor.py", line 37, in __init__
+2024-04-19 02:23:56 | ERROR | stderr |     self._init_worker()
+2024-04-19 02:23:56 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/executor/gpu_executor.py", line 52, in _init_worker
+2024-04-19 02:23:56 | ERROR | stderr |     self.driver_worker = Worker(
+2024-04-19 02:23:56 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/worker/worker.py", line 63, in __init__
+2024-04-19 02:23:56 | ERROR | stderr |     self.model_runner = ModelRunner(
+2024-04-19 02:23:56 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/worker/model_runner.py", line 90, in __init__
+2024-04-19 02:23:56 | ERROR | stderr |     self.attn_backend = get_attn_backend(
+2024-04-19 02:23:56 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/attention/selector.py", line 26, in get_attn_backend
+2024-04-19 02:23:56 | ERROR | stderr |     from vllm.attention.backends.xformers import (  # noqa: F401
+2024-04-19 02:23:56 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/attention/backends/xformers.py", line 7, in <module>
+2024-04-19 02:23:56 | ERROR | stderr |     from xformers import ops as xops
+2024-04-19 02:23:56 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/xformers/__init__.py", line 12, in <module>
+2024-04-19 02:23:56 | ERROR | stderr |     from .checkpoint import (  # noqa: E402, F401
+2024-04-19 02:23:56 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/xformers/checkpoint.py", line 27, in <module>
+2024-04-19 02:23:56 | ERROR | stderr |     from scipy.optimize import Bounds, LinearConstraint, milp
+2024-04-19 02:23:56 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/scipy/optimize/__init__.py", line 442, in <module>
+2024-04-19 02:23:56 | ERROR | stderr |     from . import (
+2024-04-19 02:23:56 | ERROR | stderr |   File "<frozen importlib._bootstrap>", line 1007, in _find_and_load
+2024-04-19 02:23:56 | ERROR | stderr |   File "<frozen importlib._bootstrap>", line 986, in _find_and_load_unlocked
+2024-04-19 02:23:56 | ERROR | stderr |   File "<frozen importlib._bootstrap>", line 666, in _load_unlocked
+2024-04-19 02:23:56 | ERROR | stderr |   File "<frozen importlib._bootstrap>", line 571, in module_from_spec
+2024-04-19 02:23:56 | ERROR | stderr |   File "<frozen importlib._bootstrap>", line 535, in _init_module_attrs
+2024-04-19 02:23:56 | ERROR | stderr | KeyboardInterrupt

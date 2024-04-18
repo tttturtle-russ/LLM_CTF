@@ -1,0 +1,44 @@
+2024-04-19 02:24:22 | ERROR | stderr | Traceback (most recent call last):
+2024-04-19 02:24:22 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/runpy.py", line 197, in _run_module_as_main
+2024-04-19 02:24:22 | ERROR | stderr |     return _run_code(code, main_globals, None,
+2024-04-19 02:24:22 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/runpy.py", line 87, in _run_code
+2024-04-19 02:24:22 | ERROR | stderr |     exec(code, run_globals)
+2024-04-19 02:24:22 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/fastchat/serve/vllm_worker.py", line 290, in <module>
+2024-04-19 02:24:22 | ERROR | stderr |     engine = AsyncLLMEngine.from_engine_args(engine_args)
+2024-04-19 02:24:22 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/engine/async_llm_engine.py", line 348, in from_engine_args
+2024-04-19 02:24:22 | ERROR | stderr |     engine = cls(
+2024-04-19 02:24:22 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/engine/async_llm_engine.py", line 311, in __init__
+2024-04-19 02:24:22 | ERROR | stderr |     self.engine = self._init_engine(*args, **kwargs)
+2024-04-19 02:24:22 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/engine/async_llm_engine.py", line 422, in _init_engine
+2024-04-19 02:24:22 | ERROR | stderr |     return engine_class(*args, **kwargs)
+2024-04-19 02:24:22 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/engine/llm_engine.py", line 110, in __init__
+2024-04-19 02:24:22 | ERROR | stderr |     self.model_executor = executor_class(model_config, cache_config,
+2024-04-19 02:24:22 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/executor/gpu_executor.py", line 37, in __init__
+2024-04-19 02:24:22 | ERROR | stderr |     self._init_worker()
+2024-04-19 02:24:22 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/executor/gpu_executor.py", line 66, in _init_worker
+2024-04-19 02:24:22 | ERROR | stderr |     self.driver_worker.load_model()
+2024-04-19 02:24:22 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/worker/worker.py", line 107, in load_model
+2024-04-19 02:24:22 | ERROR | stderr |     self.model_runner.load_model()
+2024-04-19 02:24:22 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/worker/model_runner.py", line 95, in load_model
+2024-04-19 02:24:22 | ERROR | stderr |     self.model = get_model(
+2024-04-19 02:24:22 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/model_executor/model_loader.py", line 81, in get_model
+2024-04-19 02:24:22 | ERROR | stderr |     model = model_class(model_config.hf_config, linear_method,
+2024-04-19 02:24:22 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/model_executor/models/llama.py", line 319, in __init__
+2024-04-19 02:24:22 | ERROR | stderr |     self.model = LlamaModel(config, linear_method, lora_config=lora_config)
+2024-04-19 02:24:22 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/model_executor/models/llama.py", line 247, in __init__
+2024-04-19 02:24:22 | ERROR | stderr |     self.layers = nn.ModuleList([
+2024-04-19 02:24:22 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/model_executor/models/llama.py", line 248, in <listcomp>
+2024-04-19 02:24:22 | ERROR | stderr |     LlamaDecoderLayer(config, linear_method)
+2024-04-19 02:24:22 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/model_executor/models/llama.py", line 187, in __init__
+2024-04-19 02:24:22 | ERROR | stderr |     self.mlp = LlamaMLP(
+2024-04-19 02:24:22 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/model_executor/models/llama.py", line 61, in __init__
+2024-04-19 02:24:22 | ERROR | stderr |     self.gate_up_proj = MergedColumnParallelLinear(
+2024-04-19 02:24:22 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/model_executor/layers/linear.py", line 260, in __init__
+2024-04-19 02:24:22 | ERROR | stderr |     super().__init__(input_size, sum(output_sizes), bias, gather_output,
+2024-04-19 02:24:22 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/model_executor/layers/linear.py", line 181, in __init__
+2024-04-19 02:24:22 | ERROR | stderr |     self.linear_weights = self.linear_method.create_weights(
+2024-04-19 02:24:22 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/vllm/model_executor/layers/linear.py", line 63, in create_weights
+2024-04-19 02:24:22 | ERROR | stderr |     weight = Parameter(torch.empty(output_size_per_partition,
+2024-04-19 02:24:22 | ERROR | stderr |   File "/home/russ/.conda/envs/LLM-CTF/lib/python3.9/site-packages/torch/utils/_device.py", line 77, in __torch_function__
+2024-04-19 02:24:22 | ERROR | stderr |     return func(*args, **kwargs)
+2024-04-19 02:24:22 | ERROR | stderr | torch.cuda.OutOfMemoryError: CUDA out of memory. Tried to allocate 224.00 MiB. GPU 0 has a total capacty of 5.78 GiB of which 192.94 MiB is free. Including non-PyTorch memory, this process has 4.68 GiB memory in use. Of the allocated memory 4.39 GiB is allocated by PyTorch, and 13.84 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF
