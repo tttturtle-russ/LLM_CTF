@@ -418,9 +418,10 @@ def main():
     parser.add_argument("-N", "--network", default="ctfnet", help="the Docker network to use for the CTF environment")
     parser.add_argument("-m", "--max-rounds", type=int, default=100, help="maximum number of rounds to run")
     parser.add_argument("-L", "--logfile", default=None, help="log file to write to")
+    parser.add_argument("-A", "--analysis", help="analysis file to write to")
     args = parser.parse_args()
     status.set(quiet=args.quiet, debug=args.debug)
-    logger.set(file_path=Path(args.logfile))
+    logger.set(args.analysis)
     challenge_json = Path(args.challenge_json).resolve()
     with CTFChallenge(challenge_json, args) as chal, \
             CTFConversation(chal, args) as convo:

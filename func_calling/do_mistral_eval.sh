@@ -23,13 +23,14 @@ for category in $categories; do
             model_name=$(basename "${model}")
             for i in {1..10}; do
                 log="logs/${category}/${chalname}/conversation.${model_name}.${i}.json"
+                analysis="analysis/${category}/${chalname}/analysis.${model_name}.${i}.json"
                 if [ -f "${log}" ]; then
                     printf '[%02d/10] skipping %s attempting %s/%s; log exists\n' $i "${model}" "${category}" "${chalname}"
                     continue
                 fi
                 cleanup_container
                 printf '[%02d/10] %s attempting %s/%s\n' $i "${model}" "${category}" "${chalname}"
-                python llm_ctf_solve.py -d -M ${model} -m 30 -L "${log}" "${chal}"
+                python llm_ctf_solve.py -d -M ${model} -m 30 -L "${log}" -A "${analysis}" "${chal}"
             done
         done
     done
