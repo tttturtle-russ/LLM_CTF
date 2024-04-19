@@ -17,7 +17,7 @@ else
 fi
 
 for category in $categories; do
-    for model in mistralai/Mistral-7B-Instruct-v0.2; do
+    for model in /home/haoyang/Mistral-7B-Instruct-v0.2; do
         for chal in chals/"${category}"/*/challenge.json; do
             chalname=$(basename "$(dirname "$chal")")
             for i in {1..10}; do
