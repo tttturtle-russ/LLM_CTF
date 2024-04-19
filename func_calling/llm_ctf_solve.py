@@ -400,7 +400,7 @@ def main():
     parser.add_argument("challenge_json", help="path to the JSON file describing the challenge")
     parser.add_argument("-q", "--quiet", action="store_true", help="don't print messages to the console")
     parser.add_argument("-d", "--debug", action="store_true", help="print debug messages")
-    parser.add_argument("-M", "--model", choices=MODELS, default=MODELS[0], help="the model to use")
+    parser.add_argument("-M", "--model", default=MODELS[0], help="the model to use")
     parser.add_argument("-C", "--container-image", default="ctfenv",
                         help="the Docker image to use for the CTF environment")
     parser.add_argument("-N", "--network", default="ctfnet", help="the Docker network to use for the CTF environment")
