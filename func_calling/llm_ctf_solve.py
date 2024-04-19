@@ -436,7 +436,7 @@ def main():
                 # Otherwise, we returned because the model didn't respond with anything; prompt
                 # it to keep going.
 
-                # next_msg = "Please proceed to the next step using your best judgment."
+                next_msg = "Please proceed to the next step using your best judgment."
         except GiveUpException:
             status.print(
                 "[red bold]The LLM decided to give up! NGMI.[/red bold]",
