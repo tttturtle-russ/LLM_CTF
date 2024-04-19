@@ -103,6 +103,7 @@ class CTFChallenge:
         # Put description in markdown quotes
         desc = re.sub(r"^", "> ", desc, flags=re.MULTILINE)
         self.prompt = INITIAL_MESSAGE.format(
+            system_prompt=SYSTEM_MESSAGE,
             category=category_friendly[self.category],
             name=self.challenge["name"],
             points=self.challenge.get("points", self.challenge.get("initial", 0)),
@@ -411,10 +412,7 @@ def main():
     challenge_json = Path(args.challenge_json).resolve()
     with CTFChallenge(challenge_json, args) as chal, \
             CTFConversation(chal, args) as convo:
-        if "Mistral-7B-Instruct-v0.2" in args.model:
-            next_msg = chal.prompt.format(system_prompt=convo.system_prompt)
-        else:
-            next_msg = chal.prompt
+        next_msg = chal.prompt
         try:
             while True:
                 for resp, error in convo.run_conversation_step(next_msg):
