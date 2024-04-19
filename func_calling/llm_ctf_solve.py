@@ -44,6 +44,9 @@ client = OpenAI(
     base_url="http://localhost:8000/v1"
 )
 
+# initialize the logger
+logger = Logger()
+
 category_friendly = {
     "rev": "reverse engineering",
     "pwn": "binary exploitation",
@@ -263,6 +266,7 @@ class CTFConversation:
 
     def run_conversation_step(self, message):
         self.messages.append({"role": "user", "content": message})
+        logger.user_message(self.rounds, message)
         status.user_message(message)
         # Step 1: send the initial message to the model
         response = client.chat.completions.create(
@@ -273,6 +277,7 @@ class CTFConversation:
         )
         response_message = response.choices[0].message
         tool_calls = response_message.tool_calls
+        logger.tool_used(self.rounds, tool_calls)
         yield response_message.content, None
         if not response_message.content:
             if tool_calls:
@@ -282,7 +287,8 @@ class CTFConversation:
         else:
             status.assistant_message(response_message.content)
         self.messages.append(response_message)  # extend conversation with assistant's reply
-
+        logger.assistant_message(self.rounds, response_message.content)
+        logger.code_generated(self.rounds, response_message.content)
         # Check if the conversation has gone on too long
         self.rounds += 1
         if self.rounds > self.args.max_rounds:
@@ -291,6 +297,7 @@ class CTFConversation:
                 markup=True
             )
             self.finish_reason = "max_rounds"
+            logger.finish(self.finish_reason)
             return
 
         # Step 2: if the model wants to call functions, call them and send back the results,
@@ -298,7 +305,7 @@ class CTFConversation:
         while tool_calls:
             tool_results = self.run_tools(tool_calls)
             self.messages.extend(tool_results)
-
+            logger.tool_used(self.rounds, tool_results)
             # traverse the tool results and check if any error occurred
             # if so, print the error message
             # and generate a new prompt for LLM
@@ -328,7 +335,8 @@ class CTFConversation:
             # the response so that if we end up exiting the conversation loop, the
             # conversation will be saved with the assistant's reply
             self.messages.append(response_message)
-
+            logger.assistant_message(self.rounds, response_message.content)
+            logger.code_generated(self.rounds, response_message.content)
             # Return control to the caller so they can check the response for the flag
             yield response_message.content, None
 
@@ -339,6 +347,8 @@ class CTFConversation:
                     f"[red bold]Challenge is unsolved after {self.args.max_rounds} rounds; exiting[/red bold]",
                     markup=True
                 )
+                self.finish_reason = "max_rounds"
+                logger.finish(self.finish_reason)
                 return
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -359,6 +369,7 @@ class CTFConversation:
                 "traceback": tb_string
             }
             self.finish_reason = "exception"
+            logger.finish(self.finish_reason)
 
         # Save the conversation to a file
         if self.args.logfile:
@@ -409,6 +420,7 @@ def main():
     parser.add_argument("-L", "--logfile", default=None, help="log file to write to")
     args = parser.parse_args()
     status.set(quiet=args.quiet, debug=args.debug)
+    logger.set(file_path=Path(args.logfile))
     challenge_json = Path(args.challenge_json).resolve()
     with CTFChallenge(challenge_json, args) as chal, \
             CTFConversation(chal, args) as convo:
@@ -418,6 +430,7 @@ def main():
                 for resp, error in convo.run_conversation_step(next_msg):
                     if error:
                         next_msg = NEXT_MSG.format(tool=error["tool"], message=error["message"])
+                        logger.error_tool(convo.rounds, error)
                         break
                     elif chal.solved or (resp and chal.check_flag(resp)):
                         status.print(
@@ -425,24 +438,28 @@ def main():
                             markup=True
                         )
                         convo.finish_reason = "solved"
+                        logger.finish(convo.finish_reason)
                         return 0
                     else:
                         # No flag in the response, just keep going
+                        next_msg = "Please proceed to the next step using your best judgment."
                         pass
                 # Check if we returned from the conversation loop because we hit the max rounds
                 if convo.rounds > args.max_rounds:
                     convo.finish_reason = "max_rounds"
+                    logger.finish(convo.finish_reason)
                     return 1
                 # Otherwise, we returned because the model didn't respond with anything; prompt
                 # it to keep going.
 
-                next_msg = "Please proceed to the next step using your best judgment."
+
         except GiveUpException:
             status.print(
                 "[red bold]The LLM decided to give up! NGMI.[/red bold]",
                 markup=True
             )
             convo.finish_reason = "give_up"
+            logger.finish(convo.finish_reason)
             return 0
         except KeyboardInterrupt:
             status.print(
@@ -450,6 +467,7 @@ def main():
                 markup=True
             )
             convo.finish_reason = "user_cancel"
+            logger.finish(convo.finish_reason)
             return 0
 
 
