@@ -23,6 +23,7 @@ class Logger:
     def __init__(self):
         self.assistant = []
         self.user = []
+        self.analysis = []
         self.tools = []
         self.code = []
         self.error = []
@@ -35,7 +36,7 @@ class Logger:
         self.filedir = self.filename.parent
 
     def save(self):
-        self.filedir.mkdirs(parents=True, exist_ok=True)
+        self.filedir.mkdir(parents=True, exist_ok=True)
         self.filename.write_text(json.dumps({
             "assistant": self.assistant,
             "user": self.user,
@@ -49,6 +50,10 @@ class Logger:
 
     def assistant_message(self, rounds: int, message: str):
         self.assistant.append({"rounds": rounds, "message": message})
+        if _extract_code(message):
+            self._code_generated(rounds, message)
+        else:
+            self.analysis.append({"rounds": rounds, "message": message})
 
     def tool_used(self, rounds: int,
                   tool_result: Optional[list[dict]] = None):
@@ -57,7 +62,7 @@ class Logger:
         else:
             self.tools.append({"rounds": rounds, "tool_result": None})
 
-    def code_generated(self, rounds: int, response: str):
+    def _code_generated(self, rounds: int, response: str):
         self.code.append({"rounds": rounds, "code": _extract_code(response)})
 
     def error_tool(self, rounds: int, error: dict):

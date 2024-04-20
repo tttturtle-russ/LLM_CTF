@@ -288,7 +288,6 @@ class CTFConversation:
             status.assistant_message(response_message.content)
         self.messages.append(response_message)  # extend conversation with assistant's reply
         logger.assistant_message(self.rounds, response_message.content)
-        logger.code_generated(self.rounds, response_message.content)
         # Check if the conversation has gone on too long
         self.rounds += 1
         if self.rounds > self.args.max_rounds:
@@ -336,7 +335,6 @@ class CTFConversation:
             # conversation will be saved with the assistant's reply
             self.messages.append(response_message)
             logger.assistant_message(self.rounds, response_message.content)
-            logger.code_generated(self.rounds, response_message.content)
             # Return control to the caller so they can check the response for the flag
             yield response_message.content, None
 
