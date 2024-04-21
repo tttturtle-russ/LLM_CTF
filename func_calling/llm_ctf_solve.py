@@ -211,6 +211,7 @@ Action: the action to take, should be one of toolset above\n
 Action Input: the input to the action \n
 ... (this Thought/Action/Action Input can repeat N times) \n
 Final Answer: the final answer to the original input question \n
+You also need to response with param `tool_calls` to tell me what tools you choose to call. \n
 """
 # TODO: add tool descriptions to the system message
 
