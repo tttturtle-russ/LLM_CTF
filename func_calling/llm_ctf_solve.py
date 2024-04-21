@@ -206,11 +206,11 @@ They are showed as follows: \n
 
 You should only use these tools to solve the challenge. \
 Use the following format:
-Thought: you should always think about what to do
-Action: the action to take, should be one of toolset above
-Action Input: the input to the action
-... (this Thought/Action/Action Input can repeat N times)
-Final Answer: the final answer to the original input question
+Thought: you should always think about what to do \
+Action: the action to take, should be one of toolset above\
+Action Input: the input to the action \
+... (this Thought/Action/Action Input can repeat N times) \
+Final Answer: the final answer to the original input question \
 """
 # TODO: add tool descriptions to the system message
 
@@ -234,7 +234,7 @@ class CTFConversation:
             tool_instance = tool(self.chal)
             self.available_functions[tool_instance.name] = tool_instance
         self.system_prompt = SYSTEM_MESSAGE.format(
-            toolset="\n".join([f"{tool.name}: {tool.description}" for tool in self.available_functions.values()])
+            toolset="\n".join([f"{tool.name}: {tool.description}\n" for tool in self.available_functions.values()])
         )
         self.tool_schemas = [tool.schema for tool in self.available_functions.values()]
         self.rounds = 0
