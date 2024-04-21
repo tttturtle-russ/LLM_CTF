@@ -228,7 +228,8 @@ class CTFConversation:
         self.messages = [
             # {"role": "system", "content": SYSTEM_MESSAGE},
         ]
-        self.tool_choice = "auto"
+        # self.tool_choice = "auto"
+        self.tool_choice = 'any'
         self.volume = self.chal.tmpdir
         self.available_functions = {}
         for tool in TOOLSETS.get(self.chal.category, TOOLSETS['default']):
