@@ -203,6 +203,14 @@ server (if applicable).\n
 Also you have access to a set of tools that can be used to solve the challenge.
 They are showed as follows: \n
 {toolset}
+
+You should only use these tools to solve the challenge. \
+Use the following format:
+Thought: you should always think about what to do
+Action: the action to take, should be one of toolset above
+Action Input: the input to the action
+... (this Thought/Action/Action Input can repeat N times)
+Final Answer: the final answer to the original input question
 """
 # TODO: add tool descriptions to the system message
 
