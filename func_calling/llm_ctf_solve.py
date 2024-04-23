@@ -459,7 +459,8 @@ class CTFConversation:
                 self.finish_reason = "max_rounds"
                 logger.finish(self.finish_reason)
                 return False, None
-            return False, None
+
+        return False, None
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.end_time = datetime.now()
