@@ -10,7 +10,7 @@ from pathlib import Path
 from ctflogging import status
 from tools import TOOLSETS, GiveUpException
 import traceback as tb
-
+from typing import Dict, Optional,Tuple
 from logger import Logger
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -361,7 +361,7 @@ class CTFConversation:
             })
         return tool_results
 
-    def run_conversation_step(self, message):
+    def run_conversation_step(self, message) -> Tuple[bool, Optional[Dict]]:
         self.messages.append({"role": "user", "content": message})
         logger.user_message(self.rounds, message)
         status.user_message(message)
@@ -541,7 +541,7 @@ def main():
                 solved, error = convo.run_conversation_step(next_msg)
                 if solved:
                     return 0
-                if error:
+                if error is not None:
                     next_msg = NEXT_MSG.format(tool=error["tool"], message=error["message"])
                     continue
                 # for resp, error in convo.run_conversation_step(next_msg):
