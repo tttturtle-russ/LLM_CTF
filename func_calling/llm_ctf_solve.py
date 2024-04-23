@@ -538,12 +538,14 @@ def main():
         next_msg = convo.system_prompt + chal.prompt
         try:
             while True:
-                solved, error = convo.run_conversation_step(next_msg)
-                if solved:
-                    return 0
-                if error is not None:
-                    next_msg = NEXT_MSG.format(tool=error["tool"], message=error["message"])
-                    continue
+                result = convo.run_conversation_step(next_msg)
+                print(result)
+                print(len(result))
+                # if solved:
+                #     return 0
+                # if error is not None:
+                #     next_msg = NEXT_MSG.format(tool=error["tool"], message=error["message"])
+                #     continue
                 # for resp, error in convo.run_conversation_step(next_msg):
                 #     if error:
                 #         next_msg = NEXT_MSG.format(tool=error["tool"], message=error["message"])
