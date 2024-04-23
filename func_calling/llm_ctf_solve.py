@@ -375,7 +375,6 @@ class CTFConversation:
         response_message = response.choices[0].message
         tool_calls = response_message.tool_calls
         logger.tool_used(self.rounds, tool_calls)
-        self.
         if not response_message.content:
             if tool_calls:
                 status.assistant_message("🤔 ...thinking... 🤔")
@@ -385,6 +384,14 @@ class CTFConversation:
             status.assistant_message(response_message.content)
         self.messages.append(response_message)  # extend conversation with assistant's reply
         logger.assistant_message(self.rounds, response_message.content)
+        if self.chal.solved or (response_message.content and self.chal.check_flag(response_message.content)):
+            status.print(
+                "[red bold]Challenge solved by our robot overlords![/red bold]",
+                markup=True
+            )
+            self.finish_reason = "solved"
+            logger.finish(self.finish_reason)
+            return True, None
         # Check if the conversation has gone on too long
         self.rounds += 1
         if self.rounds > self.args.max_rounds:
@@ -394,7 +401,7 @@ class CTFConversation:
             )
             self.finish_reason = "max_rounds"
             logger.finish(self.finish_reason)
-            return
+            return False, None
 
         # Step 2: if the model wants to call functions, call them and send back the results,
         # repeating until the model doesn't want to call any more functions
@@ -410,7 +417,7 @@ class CTFConversation:
                 if "error" in content:
                     status.print(f"[red bold]Error running tool {result['name']}: {content['error']}[/red bold]",
                                  markup=True)
-                    yield None, content["error"]
+                    return False, content["error"]
             # Send the tool results back to the model
             response = client.chat.completions.create(
                 model=self.args.model,
@@ -430,10 +437,17 @@ class CTFConversation:
             # extend conversation with assistant's reply; we do this before yielding
             # the response so that if we end up exiting the conversation loop, the
             # conversation will be saved with the assistant's reply
+            if self.chal.solved or (response_message.content and self.chal.check_flag(response_message.content)):
+                status.print(
+                    "[red bold]Challenge solved by our robot overlords![/red bold]",
+                    markup=True
+                )
+                self.finish_reason = "solved"
+                logger.finish(self.finish_reason)
+                return True, None
             self.messages.append(response_message)
             logger.assistant_message(self.rounds, response_message.content)
             # Return control to the caller so they can check the response for the flag
-            yield response_message.content, None
 
             # Check if the conversation has gone on too long
             self.rounds += 1
@@ -444,7 +458,8 @@ class CTFConversation:
                 )
                 self.finish_reason = "max_rounds"
                 logger.finish(self.finish_reason)
-                return
+                return False, None
+            return False, None
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.end_time = datetime.now()
@@ -523,7 +538,12 @@ def main():
         next_msg = convo.system_prompt + chal.prompt
         try:
             while True:
-                resp, error = convo.run_conversation_step(next_msg)
+                solved, error = convo.run_conversation_step(next_msg)
+                if solved:
+                    return 0
+                if error:
+                    next_msg = NEXT_MSG.format(tool=error["tool"], message=error["message"])
+                    continue
                 # for resp, error in convo.run_conversation_step(next_msg):
                 #     if error:
                 #         next_msg = NEXT_MSG.format(tool=error["tool"], message=error["message"])
@@ -547,7 +567,7 @@ def main():
                     return 1
                 # Otherwise, we returned because the model didn't respond with anything; prompt
                 # it to keep going.
-
+                next_msg = "Please proceed to the next step using your best judgment."
 
         except GiveUpException:
             status.print(
