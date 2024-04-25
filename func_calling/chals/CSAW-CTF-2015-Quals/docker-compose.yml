@@ -1,0 +1,52 @@
+k_2015:
+ container_name: k_2015
+ build: web/K_stairs-100
+ ports:
+ - "4567:4567"
+
+throwback:
+ container_name: throwback_2015
+ build: web/throwback-600
+ ports:
+ - "4000:4000"
+
+rhinoxorus:
+ container_name: rhinoxorus_2015
+ build: Pwn/rhinoxorus
+ ports:
+ - "24242:24242"
+
+notesy:
+ container_name: notesy_2015
+ build: crypto/notesy
+ ports:
+ - "8000:8000"
+
+autobots:
+ container_name: autobots_2015
+ build: Pwn/autobots
+ ports:
+ - "8888:8888"
+
+ftp:
+ container_name: ftp
+ build: reversing/ftp
+ ports:
+ - "12012:12012"
+
+sim_web:
+ container_name: lawn_care_sim_web
+ build: web/lawn-care-simulator-200/web_problem/web
+ ports:
+ - "8500:80"
+ links:
+ - sim_db
+
+sim_db:
+ container_name: lawn_care_sim_db
+ build: web/lawn-care-simulator-200/web_problem/db
+ environment:
+  MYSQL_ROOT_PASSWORD: 'vsndfvuasdf982'
+  MYSQL_DATABASE: 'users'
+  MYSQL_USER: 'bdbae08d8578858'
+  MYSQL_PASSWORD: 'a9eba252de53a86'

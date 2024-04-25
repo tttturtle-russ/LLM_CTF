@@ -19,33 +19,25 @@ def _extract_code(response: str) -> list[dict]:
 
 
 class Logger:
-    def __init__(self):
+    def __init__(self, log_file, logger):
+        self.log_file = log_file
+        self.logger = logger
         self.assistant = []
         self.user = []
         self.analysis = []
         self.tools = []
         self.code = []
         self.exception = []
-        self.filename = None
-        self.filedir = None
         self.finish_reason = "unknown"
 
-    def set(self, analysis_filename: str):
-        self.filename = Path(analysis_filename)
-        self.filedir = self.filename.parent
+    def log(self, message: str):
+        with open(self.log_file, "a") as f:
+            f.write(message)
+        if self.logger:
+            self.logger.log(message)
 
-    def save(self):
-        self.filedir.mkdir(parents=True, exist_ok=True)
-        self.filename.write_text(json.dumps({
-            "assistant": self.assistant,
-            "user": self.user,
-            "tools": self.tools,
-            "code": self.code,
-            "finish_reason": self.finish_reason
-        }, indent=4))
-
-    def user_message(self, rounds: int, message: str):
-        self.user.append({"rounds": rounds, "message": message})
+    def user_message(self, message: str):
+        self.user.append({"message": message})
 
     def assistant_message(self, rounds: int, message: str):
         self.assistant.append({"rounds": rounds, "message": message})
@@ -63,9 +55,26 @@ class Logger:
 
     def finish(self, reason: str):
         self.finish_reason = reason
-        self.save()
 
 
+# class ToolWrapper:
+#     def __init__(self, logger: Logger, tool: Tool):
+#         self.logger = logger
+#         self.tool = tool
+#
+#     def run(self, message):
+#         self.logger.log(f"Tool: {self.tool.name}")
+#         arguments = self.tool.extract_parameters(message)
+#         self.logger.log(f"Arguments: {json.dumps(arguments, indent=4)}")
+#         result = self.tool.run(arguments)
+#         result = json.loads(result)
+#         if result["error"]:
+#             self.logger.log(f"Error: {json.dumps(result['error'])}")
+#
+#
+#
+#
+#
 class GlobalLogger:
     def __init__(self):
         self.analysis = []

@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 import re
 import tempfile
@@ -43,8 +44,6 @@ client = OpenAI(
     base_url="http://localhost:8000/v1"
 )
 
-# initialize the logger
-logger = Logger()
 
 category_friendly = {
     "rev": "reverse engineering",
@@ -117,6 +116,10 @@ class CTFChallenge:
         # detected the flag in the output or because the CheckFlag tool was called
         # with the correct flag
         self.solved = False
+        self.log = Logger(
+            log_file=args.analysis,
+            logger=logging.getLogger(self.challenge["name"])
+        )
 
     def get_server_description(self):
         if self.challenge.get("server_description", None) is not None:
@@ -134,12 +137,15 @@ class CTFChallenge:
     def start_challenge_container(self):
         if self.is_compose:
             status.debug_message(f"Starting challenge services with docker-compose")
+            self.log.log(f"Starting challenge services with docker-compose")
             subprocess.run(
                 ['docker', 'compose', '-f', self.chaldir / 'docker-compose.yml', 'up', '-d'],
                 check=True, capture_output=True,
             )
+            self.log.log(f"Execute docker compose -f {self.chaldir / 'docker-compose.yml'} up -d")
             return
         if not self.challenge_container: return
+        self.log.log(f"Starting challenge container {self.challenge_container}")
         status.debug_message(f"Starting challenge container {self.challenge_container}")
         subprocess.run(
             ['docker', 'run'] + \
@@ -148,24 +154,30 @@ class CTFChallenge:
             ['--name', self.challenge_container, self.challenge_container],
             check=True, capture_output=True,
         )
+        self.log.log(f"Execute docker run --network {self.network} --platform linux/amd64 -d --rm --name {self.challenge_container} {self.challenge_container}")
 
     def stop_challenge_container(self):
         if self.is_compose:
             status.debug_message(f"Stopping challenge services with docker-compose")
+            self.log.log(f"Stopping challenge services with docker-compose")
             subprocess.run(
                 ['docker', 'compose', '-f', self.chaldir / 'docker-compose.yml', 'down'],
                 check=True, capture_output=True,
             )
+            self.log.log(f"Execute docker compose -f {self.chaldir / 'docker-compose.yml'} down")
             return
         if not self.challenge_container: return
         status.debug_message(f"Stopping challenge container {self.challenge_container}")
+        self.log.log(f"Stopping challenge container {self.challenge_container}")
         subprocess.run(
             ['docker', 'stop', self.challenge_container],
             check=True, capture_output=True,
         )
+        self.log.log(f"Execute docker stop {self.challenge_container}")
 
     def check_flag(self, resp):
         if self.real_flag in resp:
+            self.log.log(f"Correct flag found in the output: {self.real_flag}")
             status.print(
                 f"\n[red bold]Correct flag found in the output:[/red bold] [green]{self.real_flag}[/green]",
                 markup=True)
@@ -318,7 +330,7 @@ class CTFConversation:
         self.volume = self.chal.tmpdir
         self.available_functions = {}
         for tool in TOOLSETS.get(self.chal.category, TOOLSETS['default']):
-            tool_instance = tool(self.chal)
+            tool_instance = tool(self.chal, self.args.analysis)
             self.available_functions[tool_instance.name] = tool_instance
         self.system_prompt = SYSTEM_MESSAGE.format(
             toolset="\n".join([f"{tool.name}: {tool.description}\n" for tool in self.available_functions.values()])
@@ -327,6 +339,7 @@ class CTFConversation:
         self.rounds = 0
         self.start_time = datetime.now()
         self.finish_reason = "unknown"
+        self.log = self.chal.log
 
     def __enter__(self):
         # status.system_message(SYSTEM_MESSAGE)
@@ -345,10 +358,14 @@ class CTFConversation:
                 try:
                     function_args = json.loads(tool_call.function.arguments)
                     status.debug_message(f"Calling {function_name}({function_args})")
+                    self.log.log(f"Calling {function_name}({function_args})")
                     function_response = tool.run(function_args)
+                    self.log.log(f"=> {function_response}")
                     status.debug_message(f"=> {function_response}", truncate=True)
                 except json.JSONDecodeError as e:
+                    self.log.log(f"Error decoding arguments for {function_name}: {e}")
                     status.debug_message(f"Error decoding arguments for {function_name}: {e}")
+                    self.log.log(f"Arguments: {tool_call.function.arguments}")
                     status.debug_message(f"Arguments: {tool_call.function.arguments}")
                     function_response = json.dumps(
                         {"error": f"{type(e).__name__} decoding arguments for {function_name}: {e}"}
@@ -363,8 +380,9 @@ class CTFConversation:
 
     def run_conversation_step(self, message) -> Tuple[bool, Optional[Dict]]:
         self.messages.append({"role": "user", "content": message})
-        logger.user_message(self.rounds, message)
+        # logger.user_message(self.rounds, message)
         status.user_message(message)
+        self.log.log(f"User: {message}")
         # Step 1: send the initial message to the model
         response = client.chat.completions.create(
             model=self.args.model,
@@ -374,47 +392,51 @@ class CTFConversation:
         )
         response_message = response.choices[0].message
         tool_calls = response_message.tool_calls
-        logger.tool_used(self.rounds, tool_calls)
         if not response_message.content:
             if tool_calls:
+                self.log.log("Assistant: 🤔 ...thinking... 🤔")
                 status.assistant_message("🤔 ...thinking... 🤔")
             else:
+                self.log.log("Assistant: [ no response ]")
                 status.assistant_message("[ no response ]")
         else:
+            self.log.log(f"Assistant: {response_message.content}")
             status.assistant_message(response_message.content)
         self.messages.append(response_message)  # extend conversation with assistant's reply
-        logger.assistant_message(self.rounds, response_message.content)
         if self.chal.solved or (response_message.content and self.chal.check_flag(response_message.content)):
+            self.log.log("Challenge solved by our robot overlords!")
             status.print(
                 "[red bold]Challenge solved by our robot overlords![/red bold]",
                 markup=True
             )
             self.finish_reason = "solved"
-            logger.finish(self.finish_reason)
+
             return True, None
         # Check if the conversation has gone on too long
         self.rounds += 1
         if self.rounds > self.args.max_rounds:
+            self.log.log(f"Challenge is unsolved after {self.args.max_rounds} rounds; exiting")
             status.print(
                 f"[red bold]Challenge is unsolved after {self.args.max_rounds} rounds; exiting[/red bold]",
                 markup=True
             )
             self.finish_reason = "max_rounds"
-            logger.finish(self.finish_reason)
+
             return False, None
 
         # Step 2: if the model wants to call functions, call them and send back the results,
         # repeating until the model doesn't want to call any more functions
         while tool_calls:
+            self.log.log(f"Tool calls: {tool_calls}")
             tool_results = self.run_tools(tool_calls)
             self.messages.extend(tool_results)
-            logger.tool_used(self.rounds, tool_results)
             # traverse the tool results and check if any error occurred
             # if so, print the error message
             # and generate a new prompt for LLM
             for result in tool_results:
                 content = json.load(result["content"])
                 if "error" in content:
+                    self.log.log(f"Error running tool {result['name']}: {content['error']}")
                     status.print(f"[red bold]Error running tool {result['name']}: {content['error']}[/red bold]",
                                  markup=True)
                     return False, content["error"]
@@ -429,10 +451,13 @@ class CTFConversation:
             tool_calls = response_message.tool_calls
             if not response_message.content:
                 if tool_calls:
+                    self.log.log("Assistant: 🤔 ...thinking... 🤔")
                     status.assistant_message("🤔 ...thinking... 🤔")
                 else:
+                    self.log.log("Assistant: [ no response ]")
                     status.assistant_message("[ no response ]")
             else:
+                self.log.log(f"Assistant: {response_message.content}")
                 status.assistant_message(response_message.content)
             # extend conversation with assistant's reply; we do this before yielding
             # the response so that if we end up exiting the conversation loop, the
@@ -442,11 +467,10 @@ class CTFConversation:
                     "[red bold]Challenge solved by our robot overlords![/red bold]",
                     markup=True
                 )
+                self.log.log("Challenge solved by our robot overlords!")
                 self.finish_reason = "solved"
-                logger.finish(self.finish_reason)
                 return True, None
             self.messages.append(response_message)
-            logger.assistant_message(self.rounds, response_message.content)
             # Return control to the caller so they can check the response for the flag
 
             # Check if the conversation has gone on too long
@@ -456,8 +480,8 @@ class CTFConversation:
                     f"[red bold]Challenge is unsolved after {self.args.max_rounds} rounds; exiting[/red bold]",
                     markup=True
                 )
+                self.log.log(f"Challenge is unsolved after {self.args.max_rounds} rounds; exiting")
                 self.finish_reason = "max_rounds"
-                logger.finish(self.finish_reason)
                 return False, None
 
         return False, None
@@ -480,7 +504,7 @@ class CTFConversation:
                 "traceback": tb_string
             }
             self.finish_reason = "exception"
-            logger.finish(self.finish_reason)
+            self.log.log(f"Exception: {exception_info['exception_type']}: {exception_info['exception_message']}")
 
         # Save the conversation to a file
         if self.args.logfile:
@@ -532,7 +556,6 @@ def main():
     parser.add_argument("-A", "--analysis", help="analysis file to write to")
     args = parser.parse_args()
     status.set(quiet=args.quiet, debug=args.debug)
-    logger.set(args.analysis)
     challenge_json = Path(args.challenge_json).resolve()
     with CTFChallenge(challenge_json, args) as chal, \
             CTFConversation(chal, args) as convo:
@@ -563,28 +586,28 @@ def main():
                 #         pass
                 # Check if we returned from the conversation loop because we hit the max rounds
                 if convo.rounds > args.max_rounds:
+                    convo.log.log(f"Challenge is unsolved after {args.max_rounds} rounds; exiting")
                     convo.finish_reason = "max_rounds"
-                    logger.finish(convo.finish_reason)
                     return 1
                 # Otherwise, we returned because the model didn't respond with anything; prompt
                 # it to keep going.
                 next_msg = "Please proceed to the next step using your best judgment."
 
         except GiveUpException:
+            convo.log.log("The LLM decided to give up! NGMI.")
             status.print(
                 "[red bold]The LLM decided to give up! NGMI.[/red bold]",
                 markup=True
             )
             convo.finish_reason = "give_up"
-            logger.finish(convo.finish_reason)
             return 0
         except KeyboardInterrupt:
+            convo.log.log("Interrupted by user")
             status.print(
                 "[red bold]Interrupted by user[/red bold]",
                 markup=True
             )
             convo.finish_reason = "user_cancel"
-            logger.finish(convo.finish_reason)
             return 0
 
 
