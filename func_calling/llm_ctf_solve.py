@@ -11,7 +11,7 @@ from pathlib import Path
 from ctflogging import status
 from tools import TOOLSETS, GiveUpException
 import traceback as tb
-from typing import Dict, Optional,Tuple
+from typing import Dict, Optional, Tuple
 from logger import Logger
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -43,7 +43,6 @@ client = OpenAI(
     api_key="EMPTY",
     base_url="http://localhost:8000/v1"
 )
-
 
 category_friendly = {
     "rev": "reverse engineering",
@@ -154,7 +153,8 @@ class CTFChallenge:
             ['--name', self.challenge_container, self.challenge_container],
             check=True, capture_output=True,
         )
-        self.log.log(f"Execute docker run --network {self.network} --platform linux/amd64 -d --rm --name {self.challenge_container} {self.challenge_container}")
+        self.log.log(
+            f"Execute docker run --network {self.network} --platform linux/amd64 -d --rm --name {self.challenge_container} {self.challenge_container}")
 
     def stop_challenge_container(self):
         if self.is_compose:

@@ -1,20 +1,18 @@
 import json
-import logging
 import tempfile
-import uuid
 from pathlib import Path
-from typing import Optional, Type, Dict, Union, Any, List
+from typing import Optional, Type, Dict
+
+from langchain import hub
+from langchain.agents import initialize_agent, AgentType, create_react_agent, AgentExecutor
 from langchain.pydantic_v1 import BaseModel, Field
-from langchain.tools import BaseTool, StructuredTool, tool
-from langchain_core.callbacks import CallbackManagerForToolRun, Callbacks
+from langchain.tools import BaseTool
+from langchain_community.chat_models import ChatOpenAI
+from langchain_core.callbacks import CallbackManagerForToolRun
 import subprocess
-from typing import TYPE_CHECKING
 
-from func_calling.logger import Logger
+from func_calling.llm_ctf_solve import SYSTEM_MESSAGE
 from func_calling.tools import GiveUpException
-
-if TYPE_CHECKING:
-    from llm_ctf_solve import CTFChallenge
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
 GHIDRA = SCRIPT_DIR / 'ghidra_11.0_PUBLIC/support/analyzeHeadless'
@@ -31,26 +29,11 @@ class RunCommand(BaseTool):
     description = "Execute a command in an Ubuntu container (persistent across calls)"
     args_schema: Type[BaseModel] = RunCommandInput
 
-    def __init__(self, challenge: "CTFChallenge", log_file):
-        super().__init__()
-        self.challenge = challenge
-        self.container_image = challenge.container_image
-        self.container_name = challenge.container_name
-        self.network = challenge.network
-        self.volume = challenge.tmpdir
-        self.log_file = log_file
-        self.log = Logger(
-            log_file=self.log_file,
-            logger=logging.getLogger(self.name)
-        )
-
     def start_docker(self):
-        self.log.log("Starting docker container...")
         if self.volume:
             volumes = ['-v', f'{self.volume}:/home/ctfplayer/ctf_files']
         else:
             volumes = []
-        self.log.log("Docker container started.")
         subprocess.run(
             ['docker', 'run'] + \
             volumes + \
@@ -59,8 +42,6 @@ class RunCommand(BaseTool):
             ['--name', self.container_name, self.container_image],
             check=True, capture_output=True,
         )
-        self.log.log(f"Execute docker run {' '.join(volumes)} --network {self.network} --platform linux/amd64 -d --rm "
-                     f"--name {self.container_name} {self.container_image}")
 
     @staticmethod
     def _clean(text):
@@ -71,20 +52,13 @@ class RunCommand(BaseTool):
     def _run(self, command, timeout: Optional[int] = 10,
              run_manager: Optional[CallbackManagerForToolRun] = None) -> Dict:
         self.start_docker()
-        self.log.log(f"Tool: {self.name}")
-        self.log.log(f"Arguments: {command}")
-        self.log.log(f"Running command with timeout={timeout}:\n{command}")
         try:
             p = subprocess.run(
                 ['docker', 'exec', self.container_name, 'bash', '-c', command],
                 timeout=timeout, check=True, capture_output=True,
             )
-            self.log.log(f"Execute docker exec {self.container_name} bash -c {command}")
             out = self._clean(p.stdout)
             err = self._clean(p.stderr)
-            self.log.log(f"Stdout: {out}")
-            self.log.log(f"Stderr: {err}")
-            self.log.log(f"Return code: {p.returncode}")
             if p.returncode != 0:
                 return {"stdout": out, "stderr": err, "returncode": p.returncode, "timed_out": False, "error": {
                     "message": f"Command failed with return code {p.returncode} and showed the following error: {err}",
@@ -94,8 +68,6 @@ class RunCommand(BaseTool):
         except subprocess.TimeoutExpired as e:
             out = self._clean(e.stdout)
             err = self._clean(e.stderr)
-            self.log.log(f"Stdout: {out}")
-            self.log.log(f"Stderr: {err}")
             return {"stdout": out, "stderr": err, "returncode": None, "timed_out": True, "error": {
                 "message": f"Command timed out after {timeout} seconds",
                 "tool": "run_command"
@@ -104,8 +76,6 @@ class RunCommand(BaseTool):
         except subprocess.CalledProcessError as e:
             out = self._clean(e.stdout)
             err = self._clean(e.stderr)
-            self.log.log(f"Stdout: {out}")
-            self.log.log(f"Stderr: {err}")
             return {
                 "stdout": out,
                 "stderr": err,
@@ -127,38 +97,22 @@ class CheckFlag(BaseTool):
     description = "Check if a flag is correct"
     args_schema: Type[BaseModel] = CheckFlagInput
 
-    def __init__(self, challenge: "CTFChallenge", log_file):
-        super().__init__()
-        self.challenge = challenge
-        self.real_flag = challenge.real_flag
-        self.log_file = log_file
-        self.log = Logger(
-            log_file=self.log_file,
-            logger=logging.getLogger(self.name)
-        )
-
     def _run(
             self,
             flag: str,
             run_manager: Optional[CallbackManagerForToolRun] = None
     ) -> Dict:
         if flag is None:
-            self.log.log(f"{self.name} Error: No flag provided")
             return {
                 "error": {
                     "message": "No flag provided",
                     "tool": "checkflag"
                 }
             }
-        self.log.log(f"Tool: {self.name}")
-        self.log.log(f"Arguments: {flag}")
-        self.log.log(f"Checking flag:")
         if flag == self.real_flag:
-            self.log.log(f"Correct flag")
             self.challenge.solved = True
             return {"correct": True}
         else:
-            self.log.log(f"Incorrect flag")
             return {"correct": False}
 
 
@@ -175,16 +129,6 @@ class CreateFile(BaseTool):
     description = "create a file in the container with the given contents"
     args_schema: Type[BaseModel] = CreateFileInput
 
-    def __init__(self, challenge: "CTFChallenge", log_file):
-        super().__init__()
-        self.challenge = challenge
-        self.container_name = challenge.container_name
-        self.log_file = log_file
-        self.log = Logger(
-            log_file=self.log_file,
-            logger=logging.getLogger(self.name)
-        )
-
     def _run(
             self,
             path: str,
@@ -193,7 +137,6 @@ class CreateFile(BaseTool):
             run_manager: Optional[CallbackManagerForToolRun] = None
     ) -> Dict:
         if path is None:
-            self.log.log(f"{self.name} Error: No path provided")
             return {
                 "error": {
                     "message": "No path provided",
@@ -201,7 +144,6 @@ class CreateFile(BaseTool):
                 }
             }
         if contents is None:
-            self.log.log(f"{self.name} Error: No contents provided")
             return {
                 "error": {
                     "message": "No contents provided",
@@ -226,7 +168,6 @@ class CreateFile(BaseTool):
             try:
                 contents = bytes(contents, 'utf-8').decode('unicode_escape').encode('latin-1')
             except UnicodeDecodeError as e:
-                self.log.log(f"{self.name} Error: Invalid escape sequence in contents: {e}")
                 return {
                     "error": {
                         "message": f"Invalid escape sequence in contents: {e}",
@@ -241,8 +182,6 @@ class CreateFile(BaseTool):
         if not path.is_absolute():
             path = Path('/home/ctfplayer') / path
         path = str(path)
-        self.log.log(f"Tool: {self.name}")
-        self.log.log(f"Arguments: {path}, {contents}")
         with tempfile.NamedTemporaryFile(mode='wb') as f:
             f.write(contents)
             f.flush()
@@ -253,19 +192,13 @@ class CreateFile(BaseTool):
                     ['docker', 'cp', tmpfile, f'{self.container_name}:{path}'],
                     check=True, capture_output=True,
                 )
-                self.log.log(f"Execute docker cp {tmpfile} {self.container_name}:{path}")
                 # Set ownership to ctfplayer
                 subprocess.run(
                     ['docker', 'exec', '--user=root', '-it', self.container_name, 'chown', 'ctfplayer:ctfplayer', path],
                     check=True, capture_output=True,
                 )
-                self.log.log(
-                    f"Execute docker exec --user=root -it {self.container_name} chown ctfplayer:ctfplayer {path}")
-                self.log.log(f"Result: File created at {path}")
                 return {"success": True, "path": path}
             except subprocess.CalledProcessError as e:
-                self.log.log(
-                    f"Result: Error copying file into container: {e.stderr.decode('utf-8', errors='backslashreplace')}")
                 return {
                     "error": {
                         "message": f"Error copying file into container: {e.stderr.decode('utf-8', errors='backslashreplace')}",
@@ -284,16 +217,6 @@ class Decompile(BaseTool):
     description = "Decompile a function from a binary using Ghidra"
     args_schema: Type[BaseModel] = DecompileInput
 
-    def __init__(self, challenge: "CTFChallenge", log_file):
-        super().__init__()
-        self.challenge = challenge
-        self.log_file = log_file
-        self._decomp_cache = {}
-        self.log = Logger(
-            log_file=None,
-            logger=logging.getLogger(self.name)
-        )
-
     def _run(
             self,
             binary: str,
@@ -301,7 +224,6 @@ class Decompile(BaseTool):
             run_manager: Optional[CallbackManagerForToolRun] = None
     ) -> Dict:
         if binary is None:
-            self.log.log(f"{self.name} Error: No binary provided")
             return {
                 "error": {
                     "message": f"No {binary} provided",
@@ -310,8 +232,6 @@ class Decompile(BaseTool):
             }
         if function is None:
             function = "main"
-        self.log.log(f"Tool: {self.name}")
-        self.log.log(f"Arguments: {binary}, {function}")
         return self.decompile(binary, function)
 
     def decompile(self, binary, function):
@@ -324,7 +244,6 @@ class Decompile(BaseTool):
                 self._decomp_cache[basename] = json.loads(decomp_output.read_text())
             else:
                 if not self.run_ghidra(basename, decomp_output):
-                    self.log.log(f"Result: Decompilation for {binary} not available")
                     return {
                         "error": {
                             "message": f"Decompilation for {binary} not available",
@@ -337,23 +256,19 @@ class Decompile(BaseTool):
             if function == "main":
                 return self.decompile(binary, "_start")
             else:
-                self.log.log(f"Result: Function {function} not found in {binary}")
                 return {
                     "error": {
                         "message": f"Function {function} not found in {binary}",
                         "tool": "decompile_function"
                     }
                 }
-        self.log.log(f"Result: Decompiled {binary} function {function}")
         return {"decompilation": self._decomp_cache[basename][function]}
 
     def run_ghidra(self, binary, output):
-        self.log.log(f"Running Ghidra to decompile {binary}...")
         binary_paths = self.challenge.chaldir.glob(f'**/{binary}')
         real_binary = next(binary_paths, None)
         if not real_binary or not real_binary.exists():
             return False
-        self.log.log(f"Real binary path: {real_binary}")
         output.parent.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
@@ -362,8 +277,6 @@ class Decompile(BaseTool):
                  "-import", real_binary, "-postscript", "DecompileToJson.java", output],
                 check=False, capture_output=True,
             )
-            self.log.log(
-                f"Execute {GHIDRA} {tmpdir} DummyProj -scriptpath {SCRIPT_DIR / 'ghidra_scripts'} -import {real_binary} -postscript DecompileToJson.java {output}")
             return output.exists()
 
 
@@ -377,16 +290,6 @@ class Disassemble(BaseTool):
     description = "Disassemble a function from a binary using Ghidra"
     args_schema: Type[BaseModel] = DisassembleInput
 
-    def __init__(self, challenge: "CTFChallenge", log_file):
-        super().__init__()
-        self.challenge = challenge
-        self.log_file = log_file
-        self._disasm_cache = {}
-        self.log = Logger(
-            log_file=None,
-            logger=logging.getLogger(self.name)
-        )
-
     def _run(
             self,
             binary: str,
@@ -396,13 +299,12 @@ class Disassemble(BaseTool):
         if function is None:
             function = "main"
         if binary is None:
-            self.log.log(f"{self.name} Error: No binary provided")
-            return {"error": {
-                "message": "No binary provided",
-                "tool": "disassemble_function", }
+            return {
+                "error": {
+                    "message": "No binary provided",
+                    "tool": "disassemble_function"
+                    }
             }
-        self.log.log(f"Tool: {self.name}")
-        self.log.log(f"Arguments: {binary}, {function}")
         return self.disassemble(binary, function)
 
     def disassemble(self, binary, function):
@@ -415,7 +317,6 @@ class Disassemble(BaseTool):
                 self._disasm_cache[basename] = json.loads(disasm_output.read_text())
             else:
                 if not self.run_ghidra(basename, disasm_output):
-                    self.log.log(f"Result: Disassembly for {binary} not available")
                     return {
                         "error": {
                             "message": f"Disassembly for {binary} not available",
@@ -429,23 +330,19 @@ class Disassemble(BaseTool):
             if function == "main":
                 return self.disassemble(binary, "_start")
             else:
-                self.log.log(f"Result: Function {function} not found in {binary}")
                 return {
                     "error": {
                         "message": f"Function {function} not found in {binary}",
                         "tool": "disassemble_function"
                     }
                 }
-        self.log.log(f"Result: Disassembled {binary} function {function}")
         return {"disassembly": self._disasm_cache[basename][function]}
 
     def run_ghidra(self, binary, output):
-        self.log.log(f"Running Ghidra to disassemble {binary}...")
         binary_paths = self.challenge.chaldir.glob(f'**/{binary}')
         real_binary = next(binary_paths, None)
         if not real_binary or not real_binary.exists():
             return False
-        self.log.log(f"Real binary path: {real_binary}")
         output.parent.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
@@ -454,8 +351,6 @@ class Disassemble(BaseTool):
                  "-import", real_binary, "-postscript", "DisassembleToJson.java", output],
                 check=False, capture_output=True,
             )
-            self.log.log(
-                f"Execute {GHIDRA} {tmpdir} DummyProj -scriptpath {SCRIPT_DIR / 'ghidra_scripts'} -import {real_binary} -postscript DisassembleToJson.java {output}")
             return output.exists()
 
 
@@ -468,34 +363,22 @@ class GiveUp(BaseTool):
     description = "Give up on the challenge"
     args_schema: Type[BaseModel] = GiveUpInput
 
-    def __init__(self, challenge: "CTFChallenge", log_file):
-        super().__init__()
-        self.challenge = challenge
-        self.log_file = log_file
-        self.log = Logger(
-            log_file=self.log_file,
-            logger=logging.getLogger(self.name)
-        )
-
     def _run(
             self,
             confirm: bool = False,
             run_manager: Optional[CallbackManagerForToolRun] = None
-    ) -> Any:
+    ) -> Dict:
         if not confirm:
-            self.log.log(f"{self.name} Error: You must confirm that you want to give up")
-            return {"error": {
-                "message": "You must confirm that you want to give up",
-                "tool": "give_up"
+            return {
+                "error": {
+                    "message": "You must confirm that you want to give up",
+                    "tool": "give_up"
+                }
             }
-            }
-        self.log.log(f"Tool: {self.name}")
-        self.log.log(f"Arguments: {confirm}")
-        self.log.log(f"Result: Giving up on the challenge")
         raise GiveUpException()
 
 
-DEFAULT_TOOLSET = [RunCommand, CheckFlag, CreateFile, Decompile, Disassemble, GiveUp]
+DEFAULT_TOOLSET = [RunCommand(), CheckFlag(), CreateFile(), Decompile(), Disassemble(), GiveUp()]
 
 # Predefined sets of tools for different categories
 TOOLSETS = {
@@ -506,5 +389,19 @@ TOOLSETS = {
     "default": DEFAULT_TOOLSET,
 }
 
-test = RunCommand(challenge=None, log_file=None)
-print(test.args)
+llm = ChatOpenAI(
+    openai_api_key="",
+    model_name='gpt-3.5-turbo',
+)
+
+agent = create_react_agent(
+    llm,
+    DEFAULT_TOOLSET,
+    hub.pull("hwchase17/react"),
+)
+
+agent_executor = AgentExecutor(agent=agent, tools=DEFAULT_TOOLSET, verbose=True)
+agent_executor.invoke({
+    "input": "I want to give up on this challenge, I;m confirming that I want to give up",
+    "chat_history": "Human: I want to give up on this challenge\nAI: Are you sure you want to give up?",
+})
