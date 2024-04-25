@@ -11,7 +11,6 @@ from langchain_community.chat_models import ChatOpenAI
 from langchain_core.callbacks import CallbackManagerForToolRun
 import subprocess
 
-from func_calling.llm_ctf_solve import SYSTEM_MESSAGE
 from func_calling.tools import GiveUpException
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -377,8 +376,24 @@ class GiveUp(BaseTool):
             }
         raise GiveUpException()
 
+class TestInput(BaseModel):
+    a: int = Field(description="a number", default=1)
+    b: int = Field(description="another number", default=2)
 
-DEFAULT_TOOLSET = [RunCommand(), CheckFlag(), CreateFile(), Decompile(), Disassemble(), GiveUp()]
+class TestTool(BaseTool):
+    name = "test"
+    description = "test tool"
+    args_schema: Type[BaseModel] = TestInput
+
+    def _run(
+            self,
+            a: int = 1,
+            b: int = 2,
+            run_manager: Optional[CallbackManagerForToolRun] = None
+    ) -> Dict:
+        return {"sum": a + b}
+
+DEFAULT_TOOLSET = [RunCommand(), CheckFlag(), CreateFile(), Decompile(), Disassemble(), GiveUp(), TestTool()]
 
 # Predefined sets of tools for different categories
 TOOLSETS = {
@@ -391,7 +406,8 @@ TOOLSETS = {
 
 llm = ChatOpenAI(
     openai_api_key="",
-    model_name='gpt-3.5-turbo',
+    model_name='mistralai/Mistral-7B-Instruct-v0.2',
+    base_url="http://localhost:8000/v1"
 )
 
 agent = create_react_agent(
@@ -402,6 +418,5 @@ agent = create_react_agent(
 
 agent_executor = AgentExecutor(agent=agent, tools=DEFAULT_TOOLSET, verbose=True)
 agent_executor.invoke({
-    "input": "I want to give up on this challenge, I;m confirming that I want to give up",
-    "chat_history": "Human: I want to give up on this challenge\nAI: Are you sure you want to give up?",
+    "input": "Tell me the sum of 3 and 4",
 })
