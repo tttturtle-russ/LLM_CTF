@@ -1,5 +1,5 @@
 from operator import itemgetter
-from typing import Optional, List, Any
+from typing import List, Any
 
 import openai
 from langchain_core.callbacks import CallbackManagerForLLMRun
@@ -7,9 +7,7 @@ from langchain_core.language_models import BaseChatModel, LanguageModelInput
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.outputs import ChatResult, ChatGeneration
-from langchain_core.prompt_values import PromptValue
 from langchain.tools.render import render_text_description
-from openai import OpenAI
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 from langchain.llms.base import LLM
 from rich import print
