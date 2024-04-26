@@ -16,51 +16,8 @@ from langchain_tools import *
 import torch
 
 
-class Mistral(LLM):
-    def __init__(self):
-        super().__init__()
-        self.model_id = "mistralai/Mistral-7B-Instruct-v0.2"
-        self.model = AutoModelForCausalLM.from_pretrained(self.model_id)
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            self.id,
-            device_map='auto',
-            torch_dtype=torch.float16,
-            load_in_8bit=False
-        )
-        self.pipeline = pipeline(
-            "text-generation",
-            model=self.model,
-            tokenizer=self.tokenizer,
-            device_map='auto',
-            use_cache=True,
-            eos_token_id=self.tokenizer.eos_token_id,
-            pad_token_id=self.tokenizer.eos_token_id,
-            top_k=5,
-            num_return_sequences=1,
-            max_length=3200,
-            do_sample=True,
-        )
-        self.messages = []
-
-    def _call(self, prompt: str, stop: Optional[List[str]] = None,
-              run_manager: Optional[CallbackManagerForLLMRun] = None, **kwargs: Any) -> str:
-        self.messages.append(prompt)
-        inputs = self.tokenizer.apply_chat_template(self.messages, return_tensors="pt")
-        outputs = self.model.generate(
-            inputs,
-            max_new_tokens=500,
-            pad_token_id=self.tokenizer.pad_token_id,
-            eos_token_id=self.tokenizer.eos_token_id,
-            temperature=1.0,
-            top_p=1.0
-        )
-        resp = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-        self.messages.append()
-
-    @property
-    def _llm_type(self) -> str:
-        return "Mistral-7B-Instruct-v0.2"
-
+openai.base_url = "http://localhost:8000/v1/"
+openai.api_key = "na"
 
 class MistralAgent(BaseChatModel):
     name = "Mistral"
@@ -87,8 +44,6 @@ class MistralAgent(BaseChatModel):
             run_manager: Optional[CallbackManagerForLLMRun] = None,
             **kwargs: Any,
     ) -> ChatResult:
-        openai.base_url = "http://localhost:8000/v1/"
-        openai.api_key = "na"
         template_message = self.convert_messages(messages)
         resp = openai.chat.completions.create(
             messages=template_message,
@@ -140,4 +95,5 @@ print(system_prompt)
 
 chain = prompt | model | JsonOutputParser() | RunnablePassthrough.assign(output=tool_chain)
 
-print(chain.invoke({"input": "I want to know what is result of 5435345 exp 2."}))
+print(chain.invoke({"input": "Run command ls -l"}))
+
