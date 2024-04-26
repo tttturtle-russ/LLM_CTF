@@ -78,8 +78,6 @@ class MistralAgent(BaseChatModel):
         do_sample=True,
     )
 
-    def
-
     def _generate(
             self,
             messages: List[BaseMessage],
