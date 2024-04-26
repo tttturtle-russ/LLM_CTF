@@ -142,4 +142,4 @@ print(system_prompt)
 
 chain = prompt | model | JsonOutputParser() | RunnablePassthrough.assign(output=tool_chain)
 
-print(chain.invoke({"input": "What is the result of 4234234 plus 83489583495"}))
+print(chain.invoke({"input": "I want to give up and I'm confirmed"}))
