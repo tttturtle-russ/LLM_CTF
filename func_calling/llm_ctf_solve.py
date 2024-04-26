@@ -233,9 +233,9 @@ You should only returns a json blob without any other information, like this:
     }}
 }}
 
-After giving your response, you should end your response for this turn and wait for the user's next input, which will be the [Observation] of the tool's output.
-And you need to construct your next response based on the [Observation].
-** Remember! Before next [Observation], you should response nothing. **
+After giving your response, you should end your response for this turn and wait for the user's next input, which will be the result of the tool's output.
+And you need to construct your next response informed by the result.
+** Remember! Before next result, you should response nothing. **
 Once you have finished all your actions and are able to synthesize a thoughtful response for the User, ensure that you end your response by incorporating the final answer as follows:
 
 Final Answer: your final response to the User.
@@ -246,8 +246,8 @@ Final Answer: your final response to the User.
 
 Here are some requirements that you should strictly follow to format the [Action] and [Action Input]:
 
-1. **Use only available tools**: Do not use tools that are not provided above. In particular, do not use None or N/A as the [Action]. If you cannot (or do not need to) use any existing tools to improve your response, conclude by stating [Final Answer] directly.
-2. **Single JSON object**: Ensure the [Action Input] is a single JSON object that strictly follows the specification of the tool's [Arguments]. Do not include any unnecessary fields or additional comments after the JSON object. Do not include any backsticks to wrap the JSON object.
+1. **Use only available tools**: Do not use tools that are not provided above. In particular, do not use None or N/A. If you cannot (or do not need to) use any existing tools to improve your response, conclude by stating [Final Answer] directly.
+2. **Single JSON object**: Ensure the your response is a single JSON object that strictly follows the specification of above format. Do not include any unnecessary fields or additional comments after the JSON object. Do not include any backsticks to wrap the JSON object.
    - Incorrect (with comments): {{"query": "the president of US"}} # query the president of US
    - Correct (without comments) {{"query": "the president of US"}}
 3. **Avoid using placeholders**: Do not use vague input values with placeholders. Instead, first obtain the actual values for the placeholders (using other tools if necessary) and then use them in the input.
@@ -335,7 +335,7 @@ You should make tool calls to help with the [User Input] to the greatest extent 
 
 ## Start the Execution
 
-Now begin your task! Remember that the tools available to you are: {toolset}, which may be different from the tools in the example above. Please output your **NEXT** [Action]/[Action Input] or [Final Answer] (when you have finished all your actions) following the provided [Scratchpad], directly start your response with your [Thought] for the current iteration. 
+Now begin your task! Remember that the tools available to you are: {toolset}, which may be different from the tools in the example above. Please output your **NEXT** response or [Final Answer] (when you have finished all your actions) following the provided [Scratchpad].
 User Input: 
 """
 
