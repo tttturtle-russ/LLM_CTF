@@ -103,4 +103,4 @@ print(system_prompt)
 
 chain = prompt | model | JsonOutputParser() | RunnablePassthrough.assign(output=tool_chain)
 
-print(chain.invoke({"input": "Run command ls -l"}))
+print(chain.invoke({"input": "I want to get curl the google.com page."}))
