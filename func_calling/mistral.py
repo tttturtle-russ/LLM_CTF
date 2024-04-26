@@ -65,7 +65,7 @@ class MistralAgent(BaseChatModel):
         torch_dtype=torch.float16,
         load_in_8bit=False
     )
-    pipeline = pipeline(
+    pipe = pipeline(
         "text-generation",
         model=model,
         tokenizer=tokenizer,
@@ -99,20 +99,23 @@ class MistralAgent(BaseChatModel):
         last_message = messages[-1]
         print(last_message.content)
         template_message = self.convert_messages(messages)
-        inputs = self.tokenizer.apply_chat_template(template_message, return_tensors="pt")
-        outputs = self.model.generate(
-            inputs,
-            max_new_tokens=500,
-            pad_token_id=self.tokenizer.pad_token_id,
-            eos_token_id=self.tokenizer.eos_token_id,
-            temperature=1.0,
-            top_p=1.0
-        )
-        resp = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+        # inputs = self.tokenizer.apply_chat_template(template_message, return_tensors="pt")
+        # outputs = self.model.generate(
+        #     inputs,
+        #     max_new_tokens=500,
+        #     pad_token_id=self.tokenizer.pad_token_id,
+        #     eos_token_id=self.tokenizer.eos_token_id,
+        #     temperature=1.0,
+        #     top_p=1.0
+        # )
+        # resp = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+        resp = self.pipe(last_message.content)
+        print(resp)
         return ChatResult(
             generations=[
                 ChatGeneration(
-                    text=resp,
+                    text=resp[0]["generated_text"],
+                    score=resp[0]["score"],
                     model=self.name,
                     model_id=self.model_id,
                 )
