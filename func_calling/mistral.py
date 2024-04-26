@@ -121,7 +121,7 @@ system_prompt = f"""You are an assistant that has access to the following set of
 
 {rendered_tools}
 
-Given the user input, return the name and input of the tool to use. Return your response as a JSON blob with 'name' and 'arguments' keys."""
+Given the user input, return the name and input of the tool to use. Return your response as a JSON blob with 'name' and 'arguments' keys, arguments should be an object instead a list."""
 
 
 def tool_chain(model_output):
