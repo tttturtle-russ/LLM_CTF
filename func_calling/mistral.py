@@ -6,6 +6,7 @@ from langchain_core.outputs import ChatResult, ChatGeneration
 from langchain_core.prompt_values import PromptValue
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 from langchain.llms.base import LLM
+from rich import print
 import torch
 
 
@@ -131,4 +132,4 @@ class MistralAgent(BaseChatModel):
 
 test = MistralAgent()
 
-print(test.invoke("how are you").content)
+print(test.invoke("write me a quick sort algorithm in C").content)
