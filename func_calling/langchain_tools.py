@@ -376,8 +376,8 @@ class GiveUp(BaseTool):
 
 
 class TestInput(BaseModel):
-    a: int = Field(description="a number", default=1)
-    b: int = Field(description="another number", default=2)
+    num1: int = Field(description="a number", default=1)
+    num2: int = Field(description="another number", default=2)
 
 
 class TestTool(BaseTool):
@@ -387,11 +387,11 @@ class TestTool(BaseTool):
 
     def _run(
             self,
-            a: int = 1,
-            b: int = 2,
+            num1: int = 1,
+            num2: int = 2,
             run_manager: Optional[CallbackManagerForToolRun] = None
     ) -> Dict:
-        return {"sum": a + b}
+        return {"sum": num1 + num2}
 
 
 DEFAULT_TOOLSET = [RunCommand(), CheckFlag(), CreateFile(), Decompile(), Disassemble(), GiveUp(), TestTool()]
