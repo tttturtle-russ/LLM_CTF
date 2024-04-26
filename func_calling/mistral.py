@@ -93,6 +93,7 @@ class MistralAgent(BaseChatModel):
             messages=template_message,
             model=self.model_name,
         )
+        print(resp)
         return ChatResult(
             generations=[
                 ChatGeneration(
