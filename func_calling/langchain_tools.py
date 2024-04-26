@@ -417,7 +417,3 @@ Given the user input, return the name and input of the tool to use. Return your 
 prompt = ChatPromptTemplate.from_messages(
     [("user", system_prompt + "{input}")]
 )
-
-from mistral import MistralAgent
-
-ChatOpenAI

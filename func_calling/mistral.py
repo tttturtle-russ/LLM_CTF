@@ -4,6 +4,7 @@ from langchain_core.language_models import BaseChatModel, LanguageModelInput
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langchain_core.outputs import ChatResult, ChatGeneration
 from langchain_core.prompt_values import PromptValue
+from openai import OpenAI
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 from langchain.llms.base import LLM
 from rich import print
@@ -59,25 +60,10 @@ class Mistral(LLM):
 class MistralAgent(BaseChatModel):
     name = "Mistral"
     model_id = "/home/haoyang/Mistral-7B-Instruct-v0.2"
-    model = AutoModelForCausalLM.from_pretrained(model_id).cuda()
-    tokenizer = AutoTokenizer.from_pretrained(
-        model_id,
-        device_map='auto',
-        torch_dtype=torch.float16,
-        load_in_8bit=False
-    )
-    _pipe = pipeline(
-        "text-generation",
-        model=model,
-        tokenizer=tokenizer,
-        device_map='auto',
-        use_cache=True,
-        eos_token_id=tokenizer.eos_token_id,
-        pad_token_id=tokenizer.eos_token_id,
-        top_k=5,
-        num_return_sequences=1,
-        max_length=3200,
-        do_sample=True,
+    model = AutoModelForCausalLM.from_pretrained(model_id)
+    client = OpenAI(
+        api_key="na",
+        base_url="http://localhost:8000/v1"
     )
 
     @staticmethod
@@ -100,26 +86,16 @@ class MistralAgent(BaseChatModel):
         last_message = messages[-1]
         print(last_message.content)
         template_message = self.convert_messages(messages)
-        print(template_message)
-        inputs = (self.tokenizer.apply_chat_template(template_message, return_tensors="pt").
-                  to('cuda'))
-        print("apply chat template")
-        outputs = self.model.generate(
-            inputs,
-            max_new_tokens=500,
-            pad_token_id=self.tokenizer.eos_token_id,
-            eos_token_id=self.tokenizer.eos_token_id,
-            temperature=1.0,
-            top_p=1.0
+        resp = self.client.chat.completions.create(
+            messages=template_message,
+            model=self.model_id,
         )
-        print("generate outputs")
-        resp = self.tokenizer.decode(outputs.squeeze(), skip_special_tokens=True)
         print(resp)
         return ChatResult(
             generations=[
                 ChatGeneration(
                     message=AIMessage(
-                        content=resp,
+                        content=resp.choices[0].message.content,
                         additional_kwargs={},  # Used to add additional payload (e.g., function calling request)
                         response_metadata={  # Use for response metadata
                             "time_in_seconds": 3,
