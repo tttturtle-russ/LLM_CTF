@@ -155,6 +155,7 @@ class CTFChallenge:
             ['--name', self.challenge_container, self.challenge_container],
             check=True, capture_output=True,
         )
+        status.print(f"Execute docker run --network {self.network} --platform linux/amd64 -d --rm --name {self.challenge_container} {self.challenge_container}")
         self.log.log(
             f"Execute docker run --network {self.network} --platform linux/amd64 -d --rm --name {self.challenge_container} {self.challenge_container}")
 
