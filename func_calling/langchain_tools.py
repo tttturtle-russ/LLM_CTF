@@ -8,7 +8,9 @@ from langchain.agents import initialize_agent, AgentType, create_react_agent, Ag
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import BaseTool
 from langchain_community.chat_models import ChatOpenAI
+from langchain.tools.render import render_text_description_and_args
 from langchain_core.callbacks import CallbackManagerForToolRun
+from langchain_core.prompts import ChatPromptTemplate
 import subprocess
 
 from func_calling.tools import GiveUpException
@@ -404,19 +406,18 @@ TOOLSETS = {
     "default": DEFAULT_TOOLSET,
 }
 
-llm = ChatOpenAI(
-    openai_api_key="",
-    model_name='mistralai/Mistral-7B-Instruct-v0.2',
-    base_url="http://localhost:8000/v1"
+rendered_tools = render_text_description_and_args(DEFAULT_TOOLSET)
+
+system_prompt = f"""You are an assistant that has access to the following set of tools. Here are the names and descriptions for each tool:
+
+{rendered_tools}
+
+Given the user input, return the name and input of the tool to use. Return your response as a JSON blob with 'name' and 'arguments' keys."""
+
+prompt = ChatPromptTemplate.from_messages(
+    [("user", system_prompt + "{input}")]
 )
 
-agent = create_react_agent(
-    llm,
-    DEFAULT_TOOLSET,
-    hub.pull("hwchase17/react"),
-)
+from mistral import MistralAgent
 
-agent_executor = AgentExecutor(agent=agent, tools=DEFAULT_TOOLSET, verbose=True)
-agent_executor.invoke({
-    "input": "Tell me the sum of 3 and 4",
-})
+ChatOpenAI

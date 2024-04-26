@@ -1,9 +1,10 @@
 from typing import Optional, List, Any
 from langchain_core.callbacks import CallbackManagerForLLMRun
-from langchain_core.tools import BaseTool
+from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import BaseMessage
+from langchain_core.outputs import ChatResult, ChatGeneration
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 from langchain.llms.base import LLM
-from langchain.agents import load_tools, initialize_agent, AgentType
 import torch
 
 
@@ -53,17 +54,55 @@ class Mistral(LLM):
         return "Mistral-7B-Instruct-v0.2"
 
 
+class MistralAgent(BaseChatModel):
+    name = "Mistral"
+    model_id = "/home/haoyang/Mistral-7B-Instruct-v0.2"
+    model = AutoModelForCausalLM.from_pretrained(model_id)
+    tokenizer = AutoTokenizer.from_pretrained(
+        model_id,
+        device_map='auto',
+        torch_dtype=torch.float16,
+        load_in_8bit=False
+    )
+    pipeline = pipeline(
+        "text-generation",
+        model=model,
+        tokenizer=tokenizer,
+        device_map='auto',
+        use_cache=True,
+        eos_token_id=tokenizer.eos_token_id,
+        pad_token_id=tokenizer.eos_token_id,
+        top_k=5,
+        num_return_sequences=1,
+        max_length=3200,
+        do_sample=True,
+    )
 
-class MistralAgent:
-    def __init__(self, llm: Mistral, tool_choice: List[BaseTool]):
-        self.model = llm
-        self.tools = tool_choice
-        self.agent = initialize_agent(
-            tools=self.tools,
-            llm=self.model,
-            agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-            verbose=True
+    def _generate(
+            self,
+            messages: List[BaseMessage],
+            stop: Optional[List[str]] = None,
+            run_manager: Optional[CallbackManagerForLLMRun] = None,
+            **kwargs: Any,
+    ) -> ChatResult:
+        last_message = messages[-1]
+        resp = self.pipeline(last_message.text)
+        return ChatResult(
+            generations=[
+                ChatGeneration(
+                    text=resp[0]["generated_text"],
+                    score=resp[0]["score"],
+                    model=self.name,
+                    model_id=self.model_id,
+                )
+            ]
         )
 
-    def generate(self, prompt):
-        return self.agent.run(prompt)
+    @property
+    def _llm_type(self) -> str:
+        return "Mistral-7B-Instruct-v0.2"
+
+
+test = MistralAgent()
+
+test.invoke("how are you")
