@@ -115,11 +115,9 @@ class MistralAgent(BaseChatModel):
 
 
 model = MistralAgent()
-tools = [RunCommand(), CheckFlag(), CreateFile(), Disassemble(), Decompile(), TestTool()]
-print(str(tools[1].args))
-rendered_tools = render_text_description_and_args(tools).replace("{", "{{").replace("}", "}}")
+tools = [RunCommand(), CheckFlag(), CreateFile(), Disassemble(), Decompile(),GiveUp(), TestTool()]
 
-print(rendered_tools)
+rendered_tools = render_text_description_and_args(tools).replace("{", "{{").replace("}", "}}")
 
 system_prompt = f"""You are an assistant that has access to the following set of tools. Here are the names and descriptions for each tool:
 
