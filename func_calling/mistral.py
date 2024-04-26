@@ -1,7 +1,7 @@
 from typing import Optional, List, Any
 from langchain_core.callbacks import CallbackManagerForLLMRun
 from langchain_core.language_models import BaseChatModel, LanguageModelInput
-from langchain_core.messages import BaseMessage, HumanMessage
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langchain_core.outputs import ChatResult, ChatGeneration
 from langchain_core.prompt_values import PromptValue
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
@@ -109,14 +109,17 @@ class MistralAgent(BaseChatModel):
             top_p=1.0
         )
         resp = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-        print(resp)
+
         return ChatResult(
             generations=[
                 ChatGeneration(
-                    text=resp,
-                    score=resp,
-                    model=self.name,
-                    model_id=self.model_id,
+                    message=AIMessage(
+                        content=resp,
+                        additional_kwargs={},  # Used to add additional payload (e.g., function calling request)
+                        response_metadata={  # Use for response metadata
+                            "time_in_seconds": 3,
+                        },
+                    )
                 )
             ]
         )
