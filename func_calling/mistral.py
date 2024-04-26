@@ -1,4 +1,6 @@
 from typing import Optional, List, Any
+
+import openai
 from langchain_core.callbacks import CallbackManagerForLLMRun
 from langchain_core.language_models import BaseChatModel, LanguageModelInput
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
@@ -60,10 +62,10 @@ class Mistral(LLM):
 class MistralAgent(BaseChatModel):
     name = "Mistral"
     model_name = "/home/haoyang/Mistral-7B-Instruct-v0.2"
-    client = OpenAI(
-        api_key="na",
-        base_url="http://localhost:8000/v1"
-    )
+    # client = OpenAI(
+    #     api_key="na",
+    #     base_url="http://localhost:8000/v1"
+    # )
 
     @staticmethod
     def convert_messages(messages: List[BaseMessage]):
@@ -81,11 +83,13 @@ class MistralAgent(BaseChatModel):
             run_manager: Optional[CallbackManagerForLLMRun] = None,
             **kwargs: Any,
     ) -> ChatResult:
+        openai.base_url = "http://localhost:8000/v1"
+        openai.api_key="na"
         print(messages)
         last_message = messages[-1]
         print(last_message.content)
         template_message = self.convert_messages(messages)
-        resp = self.client.chat.completions.create(
+        resp = openai.chat.completions.create(
             messages=template_message,
             model=self.model_name,
         )
