@@ -555,6 +555,8 @@ def main():
     parser.add_argument("-L", "--logfile", default=None, help="log file to write to")
     parser.add_argument("-A", "--analysis", help="analysis file to write to")
     args = parser.parse_args()
+    print(args)
+    input()
     status.set(quiet=args.quiet, debug=args.debug)
     challenge_json = Path(args.challenge_json).resolve()
     with CTFChallenge(challenge_json, args) as chal, \
