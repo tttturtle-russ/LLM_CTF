@@ -23,7 +23,7 @@ class RunCommandInput(BaseModel):
 
 
 class RunCommand(BaseTool):
-    name = "runcommand"
+    name = "run command"
     description = "Execute a command in an Ubuntu container (persistent across calls)"
     args_schema: Type[BaseModel] = RunCommandInput
 
@@ -94,7 +94,7 @@ class CheckFlagInput(BaseModel):
 
 
 class CheckFlag(BaseTool):
-    name = "checkflag"
+    name = "check flag"
     description = "Check if a flag is correct"
     args_schema: Type[BaseModel] = CheckFlagInput
 
@@ -128,7 +128,7 @@ class CreateFileInput(BaseModel):
 
 
 class CreateFile(BaseTool):
-    name = "createfile"
+    name = "create file"
     description = "create a file in the container with the given contents"
     args_schema: Type[BaseModel] = CreateFileInput
 
@@ -145,14 +145,14 @@ class CreateFile(BaseTool):
             return {
                 "error": {
                     "message": "No path provided",
-                    "tool": "createfile"
+                    "tool": "create file"
                 }
             }
         if contents is None:
             return {
                 "error": {
                     "message": "No contents provided",
-                    "tool": "createfile"
+                    "tool": "create file"
                 }
             }
         if decode_escapes is None:
@@ -176,7 +176,7 @@ class CreateFile(BaseTool):
                 return {
                     "error": {
                         "message": f"Invalid escape sequence in contents: {e}",
-                        "tool": "createfile"
+                        "tool": "create file"
                     }
                 }
 
@@ -208,7 +208,7 @@ class CreateFile(BaseTool):
                 return {
                     "error": {
                         "message": f"Error copying file into container: {e.stderr.decode('utf-8', errors='backslashreplace')}",
-                        "tool": "createfile"
+                        "tool": "create file"
                     }
                 }
 
@@ -236,7 +236,7 @@ class Decompile(BaseTool):
             return {
                 "error": {
                     "message": f"No {binary} provided",
-                    "tool": "decompile_function"
+                    "tool": "decompile function"
                 }
             }
         if function is None:
@@ -256,7 +256,7 @@ class Decompile(BaseTool):
                     return {
                         "error": {
                             "message": f"Decompilation for {binary} not available",
-                            "tool": "decompile_function"
+                            "tool": "decompile function"
                         }
                     }
                 self._decomp_cache[basename] = json.loads(decomp_output.read_text())
@@ -268,7 +268,7 @@ class Decompile(BaseTool):
                 return {
                     "error": {
                         "message": f"Function {function} not found in {binary}",
-                        "tool": "decompile_function"
+                        "tool": "decompile function"
                     }
                 }
         return {"decompilation": self._decomp_cache[basename][function]}
@@ -314,7 +314,7 @@ class Disassemble(BaseTool):
             return {
                 "error": {
                     "message": "No binary provided",
-                    "tool": "disassemble_function"
+                    "tool": "disassemble function"
                 }
             }
         return self.disassemble(binary, function)
@@ -332,7 +332,7 @@ class Disassemble(BaseTool):
                     return {
                         "error": {
                             "message": f"Disassembly for {binary} not available",
-                            "tool": "disassemble_function"
+                            "tool": "disassemble function"
                         }
                     }
                 self._disasm_cache[basename] = json.loads(disasm_output.read_text())
@@ -345,7 +345,7 @@ class Disassemble(BaseTool):
                 return {
                     "error": {
                         "message": f"Function {function} not found in {binary}",
-                        "tool": "disassemble_function"
+                        "tool": "disassemble function"
                     }
                 }
         return {"disassembly": self._disasm_cache[basename][function]}
@@ -388,28 +388,6 @@ class GiveUp(BaseTool):
                 }
             }
         return {"give up": True}
-
-
-class TestInput(BaseModel):
-    # num1: int = Field(description="a number", default=1)
-    # num2: int = Field(description="another number", default=2)
-    command: str = Field(description="command to run", default="echo 'hello world'")
-
-
-class TestTool(BaseTool):
-    name = "runcommand"
-    description = "run given command by using subprocess.run()"
-    args_schema: Type[BaseModel] = TestInput
-
-    def _run(
-            self,
-            command: str = "echo 'hello world'",
-            # num1: int = 1,
-            # num2: int = 2,
-            run_manager: Optional[CallbackManagerForToolRun] = None
-    ) -> Dict:
-        p = subprocess.run(command.split(" "), check=True, capture_output=True)
-        return {"stdout": p.stdout.decode(), "stderr": p.stderr.decode(), "returncode": p.returncode}
 
 
 DEFAULT_TOOLSET = [RunCommand(), CheckFlag(), CreateFile(), Decompile(), Disassemble(), GiveUp()]
