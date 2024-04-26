@@ -9,10 +9,12 @@ import argparse
 import shutil
 from pathlib import Path
 from ctflogging import status
-from tools import TOOLSETS, GiveUpException
 import traceback as tb
 from typing import Dict, Optional, Tuple
 from logger import Logger
+
+from mistral import MistralChain
+from langchain_tools import *
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
 
@@ -328,55 +330,60 @@ class CTFConversation:
         # self.tool_choice = "auto"
         self.tool_choice = 'any'
         self.volume = self.chal.tmpdir
-        self.available_functions = {}
-        for tool in TOOLSETS.get(self.chal.category, TOOLSETS['default']):
-            tool_instance = tool(self.chal, self.args.analysis)
-            self.available_functions[tool_instance.name] = tool_instance
+        # self.available_functions = {}
+        # for tool in TOOLSETS.get(self.chal.category, TOOLSETS['default']):
+        #     tool_instance = tool(self.chal, self.args.analysis)
+        #     self.available_functions[tool_instance.name] = tool_instance
         self.system_prompt = SYSTEM_MESSAGE.format(
-            toolset="\n".join([f"{tool.name}: {tool.description}\n" for tool in self.available_functions.values()])
+            toolset=render_text_description_and_args(
+                TOOLSETS.get(self.chal.category, TOOLSETS['default'])).
+            replace("{", "{{").
+            replace("}", "}}")
         )
-        self.tool_schemas = [tool.schema for tool in self.available_functions.values()]
+        # self.tool_schemas = [tool.schema for tool in self.available_functions.values()]
         self.rounds = 0
         self.start_time = datetime.now()
         self.finish_reason = "unknown"
         self.log = self.chal.log
+        self.chain = MistralChain
 
     def __enter__(self):
+        ...
         # status.system_message(SYSTEM_MESSAGE)
-        for tool in self.available_functions.values():
-            tool.setup()
-        return self
+        # for tool in self.available_functions.values():
+        #     tool.setup()
+        # return self
 
-    def run_tools(self, tool_calls):
-        tool_results = []
-        for tool_call in tool_calls:
-            function_name = tool_call.function.name
-            tool = self.available_functions.get(function_name)
-            if not tool:
-                function_response = json.dumps({"error": f"Unknown function {function_name}"})
-            else:
-                try:
-                    function_args = json.loads(tool_call.function.arguments)
-                    status.debug_message(f"Calling {function_name}({function_args})")
-                    self.log.log(f"Calling {function_name}({function_args})")
-                    function_response = tool.run(function_args)
-                    self.log.log(f"=> {function_response}")
-                    status.debug_message(f"=> {function_response}", truncate=True)
-                except json.JSONDecodeError as e:
-                    self.log.log(f"Error decoding arguments for {function_name}: {e}")
-                    status.debug_message(f"Error decoding arguments for {function_name}: {e}")
-                    self.log.log(f"Arguments: {tool_call.function.arguments}")
-                    status.debug_message(f"Arguments: {tool_call.function.arguments}")
-                    function_response = json.dumps(
-                        {"error": f"{type(e).__name__} decoding arguments for {function_name}: {e}"}
-                    )
-            tool_results.append({
-                "tool_call_id": tool_call.id,
-                "role": "tool",
-                "name": function_name,
-                "content": function_response,
-            })
-        return tool_results
+    # def run_tools(self, tool_calls):
+    #     tool_results = []
+    #     for tool_call in tool_calls:
+    #         function_name = tool_call.function.name
+    #         tool = self.available_functions.get(function_name)
+    #         if not tool:
+    #             function_response = json.dumps({"error": f"Unknown function {function_name}"})
+    #         else:
+    #             try:
+    #                 function_args = json.loads(tool_call.function.arguments)
+    #                 status.debug_message(f"Calling {function_name}({function_args})")
+    #                 self.log.log(f"Calling {function_name}({function_args})")
+    #                 function_response = tool.run(function_args)
+    #                 self.log.log(f"=> {function_response}")
+    #                 status.debug_message(f"=> {function_response}", truncate=True)
+    #             except json.JSONDecodeError as e:
+    #                 self.log.log(f"Error decoding arguments for {function_name}: {e}")
+    #                 status.debug_message(f"Error decoding arguments for {function_name}: {e}")
+    #                 self.log.log(f"Arguments: {tool_call.function.arguments}")
+    #                 status.debug_message(f"Arguments: {tool_call.function.arguments}")
+    #                 function_response = json.dumps(
+    #                     {"error": f"{type(e).__name__} decoding arguments for {function_name}: {e}"}
+    #                 )
+    #         tool_results.append({
+    #             "tool_call_id": tool_call.id,
+    #             "role": "tool",
+    #             "name": function_name,
+    #             "content": function_response,
+    #         })
+    #     return tool_results
 
     def run_conversation_step(self, message) -> Tuple[bool, Optional[Dict]]:
         self.messages.append({"role": "user", "content": message})
@@ -384,12 +391,13 @@ class CTFConversation:
         status.user_message(message)
         self.log.log(f"User: {message}")
         # Step 1: send the initial message to the model
-        response = client.chat.completions.create(
-            model=self.args.model,
-            messages=self.messages,
-            tools=self.tool_schemas,
-            tool_choice=self.tool_choice,
-        )
+        # response = client.chat.completions.create(
+        #     model=self.args.model,
+        #     messages=self.messages,
+        #     tools=self.tool_schemas,
+        #     tool_choice=self.tool_choice,
+        # )
+        response = self.chain.invoke({"initial_message": self.system_prompt, "chat_history": self.messages, "input": message})
         response_message = response.choices[0].message
         tool_calls = response_message.tool_calls
         if not response_message.content:
@@ -535,8 +543,8 @@ class CTFConversation:
             indent=4
         ))
         status.print(f"Conversation saved to {logfilename}")
-        for tool in self.available_functions.values():
-            tool.teardown(exc_type, exc_value, traceback)
+        # for tool in self.available_functions.values():
+        #     tool.teardown(exc_type, exc_value, traceback)
 
 
 def main():

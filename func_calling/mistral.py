@@ -93,14 +93,14 @@ def tool_chain(model_output):
 
 prompt = ChatPromptTemplate.from_messages(
     [
-        ("user", system_prompt + "{input}"),
-        # MessagesPlaceholder("assistant"),
-        # ("user", "{input}")
+        ("user", "{initial_message}"),
+        MessagesPlaceholder("chat_history"),
+        ("user", "{input}")
     ]
 )
 
 print(system_prompt)
 
-chain = prompt | model | JsonOutputParser() | RunnablePassthrough.assign(output=tool_chain)
+MistralChain = prompt | model | JsonOutputParser() | RunnablePassthrough.assign(output=tool_chain)
 
-print(chain.invoke({"input": "I want to get curl the google.com page."}))
+print(json.dumps(MistralChain.invoke({"input": "I want to get curl the google.com page."})))
