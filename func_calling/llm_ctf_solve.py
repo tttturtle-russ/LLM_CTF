@@ -158,6 +158,7 @@ class CTFChallenge:
         status.print(f"Execute docker run --network {self.network} --platform linux/amd64 -d --rm --name {self.challenge_container} {self.challenge_container}")
         self.log.log(
             f"Execute docker run --network {self.network} --platform linux/amd64 -d --rm --name {self.challenge_container} {self.challenge_container}")
+        input()
 
     def stop_challenge_container(self):
         if self.is_compose:
