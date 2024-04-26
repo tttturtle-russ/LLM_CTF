@@ -55,7 +55,7 @@ class MistralAgent(BaseChatModel):
         self._messages.append(HumanMessage(content=messages[-1].content))
         # template_message = self.convert_messages(self._messages)
         resp = openai.chat.completions.create(
-            messages=self._message,
+            messages=self._messages,
             model=self.model_name,
         )
         self._messages.append(AIMessage(content=resp.choices[0].message.content))
