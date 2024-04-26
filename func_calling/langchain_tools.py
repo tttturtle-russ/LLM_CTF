@@ -27,7 +27,7 @@ class RunCommand(BaseTool):
     description = "Execute a command in an Ubuntu container (persistent across calls)"
     args_schema: Type[BaseModel] = RunCommandInput
 
-    args: Namespace = None
+    namespace: Namespace = None
 
     def start_docker(self):
         if self.volume:
