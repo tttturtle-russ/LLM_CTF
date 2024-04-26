@@ -100,6 +100,7 @@ class MistralAgent(BaseChatModel):
         last_message = messages[-1]
         print(last_message.content)
         template_message = self.convert_messages(messages)
+        print(template_message)
         inputs = self.tokenizer.apply_chat_template(template_message, return_tensors="pt")
         outputs = self.model.generate(
             inputs,
@@ -110,7 +111,7 @@ class MistralAgent(BaseChatModel):
             top_p=1.0
         )
         resp = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-
+        print(resp)
         return ChatResult(
             generations=[
                 ChatGeneration(
