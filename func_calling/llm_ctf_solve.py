@@ -372,7 +372,7 @@ class CTFConversation:
         #     tool_instance = tool(self.chal, self.args.analysis)
         #     self.available_functions[tool_instance.name] = tool_instance
         self.tools = TOOLSETS.get(self.chal.category, TOOLSETS['default'])
-        self.system_prompt = SYSTEM_MESSAGE.format(
+        self.system_prompt = TEST_SYSTEM_MESSAGE.format(
             toolset=generate_tool_description_and_args(self.tools)
         )
         # self.tool_schemas = [tool.schema for tool in self.available_functions.values()]
