@@ -23,7 +23,7 @@ class RunCommandInput(BaseModel):
 
 
 class RunCommand(BaseTool):
-    name = "run command"
+    name = "runcommand"
     description = "Execute a command in an Ubuntu container (persistent across calls)"
     args_schema: Type[BaseModel] = RunCommandInput
 
@@ -61,17 +61,17 @@ class RunCommand(BaseTool):
             out = self._clean(p.stdout)
             err = self._clean(p.stderr)
             if p.returncode != 0:
-                return {"stdout": out, "stderr": err, "returncode": p.returncode, "timed_out": False, "error": {
+                return {"stdout": out, "stderr": err, "returncode": p.returncode, "timeout": False, "error": {
                     "message": f"Command failed with return code {p.returncode} and showed the following error: {err}",
-                    "tool": "run command"
+                    "tool": "runcommand"
                 }}
-            return {"stdout": out, "stderr": err, "returncode": p.returncode, "timed_out": False}
+            return {"stdout": out, "stderr": err, "returncode": p.returncode, "timeout": False}
         except subprocess.TimeoutExpired as e:
             out = self._clean(e.stdout)
             err = self._clean(e.stderr)
-            return {"stdout": out, "stderr": err, "returncode": None, "timed_out": True, "error": {
+            return {"stdout": out, "stderr": err, "returncode": None, "timeout": True, "error": {
                 "message": f"Command timed out after {timeout} seconds",
-                "tool": "run command"
+                "tool": "runcommand"
             }
                     }
         except subprocess.CalledProcessError as e:
@@ -81,10 +81,10 @@ class RunCommand(BaseTool):
                 "stdout": out,
                 "stderr": err,
                 "returncode": e.returncode,
-                "timed_out": False,
+                "timeout": False,
                 "error": {
                     "message": f"Command failed to with returncode {e.returncode} and showed the following error: {err}",
-                    "tool": "run command"
+                    "tool": "runcommand"
                 }
             }
 
