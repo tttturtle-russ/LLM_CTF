@@ -224,7 +224,7 @@ They are showed as follows: \n
 
 Given the user input, return the name and input of the tool to use. Return your response as a JSON blob with 'name' and 'arguments' keys.
 The tool-use [Scratchpad] documents the history of tool usage, which is formatted as follows and should be used to structure your response:
-You should only returns a json blob without any other information, like this:
+You should only returns a json blob without any other information or nonsense, like this:
 {{
     "name": "tool_name",
     "arguments": {{
@@ -308,7 +308,7 @@ End turn
 
 ### Helpfulness Requirements for Tool Calls
 
-You should make tool calls to help with the [User Input] to the greatest extent feasible, adhering to the following requirements:
+You should make tool calls to help with the challenge description to the greatest extent feasible, adhering to the following requirements:
 
 1. Effective Tool Use Requirement: The tools should be utilized strategically to collect useful information and take effective actions for answering the question or accomplishing the task specified in the [User Input] to the greatest extent possible. The tool calls should be useful for the purpose and correctly align with the specified task, while unnecessary, irrelevant, or incorrect ones should not be executed.
 2. Autonomous Requirement: You should operate autonomously, that is, it should strive to accomplish the tasks by utilizing the provided tools on its own, and seek User assistance only when necessary. In particular, if a tool call requires specific information or non-commonsense knowledge that is not available, you should try to collect the information by utilizing other tools before asking the User for the information. Otherwise, you should provide a clear explanation of why it needs the information and a specific query to the User that will be useful for taking future actions for completing the task.
@@ -319,7 +319,7 @@ You should make tool calls to help with the [User Input] to the greatest extent 
 ## Start the Execution
 
 Now begin your task! Remember that the tools available to you are: {toolset}, which may be different from the tools in the example above. Please output your **NEXT** response or [Final Answer] (when you have finished all your actions) following the provided [Scratchpad].
-User Input: 
+The challenge description: 
 """
 
 
