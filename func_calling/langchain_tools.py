@@ -30,16 +30,16 @@ class RunCommand(BaseTool):
     namespace: Namespace = None
 
     def start_docker(self):
-        if self.volume:
-            volumes = ['-v', f'{self.volume}:/home/ctfplayer/ctf_files']
+        if self.namespace.volume:
+            volumes = ['-v', f'{self.namespace.volume}:/home/ctfplayer/ctf_files']
         else:
             volumes = []
         subprocess.run(
             ['docker', 'run'] + \
             volumes + \
-            ['--network', self.network] + \
+            ['--network', self.namespace.network] + \
             ['--platform', 'linux/amd64', '-d', '--rm'] + \
-            ['--name', self.container_name, self.container_image],
+            ['--name', self.namespace.container_name, self.namespace.container_image],
             check=True, capture_output=True,
         )
 
@@ -55,7 +55,7 @@ class RunCommand(BaseTool):
         self.start_docker()
         try:
             p = subprocess.run(
-                ['docker', 'exec', self.container_name, 'bash', '-c', command],
+                ['docker', 'exec', self.namespace.container_name, 'bash', '-c', command],
                 timeout=timeout, check=True, capture_output=True,
             )
             out = self._clean(p.stdout)
@@ -98,6 +98,8 @@ class CheckFlag(BaseTool):
     description = "Check if a flag is correct"
     args_schema: Type[BaseModel] = CheckFlagInput
 
+    real_flag: str = None
+
     def _run(
             self,
             flag: str,
@@ -129,6 +131,8 @@ class CreateFile(BaseTool):
     name = "createfile"
     description = "create a file in the container with the given contents"
     args_schema: Type[BaseModel] = CreateFileInput
+
+    namespace: Namespace = None
 
     def _run(
             self,
@@ -190,12 +194,12 @@ class CreateFile(BaseTool):
             # Copy the file into the container
             try:
                 subprocess.run(
-                    ['docker', 'cp', tmpfile, f'{self.container_name}:{path}'],
+                    ['docker', 'cp', tmpfile, f'{self.namespace.container_name}:{path}'],
                     check=True, capture_output=True,
                 )
                 # Set ownership to ctfplayer
                 subprocess.run(
-                    ['docker', 'exec', '--user=root', '-it', self.container_name, 'chown', 'ctfplayer:ctfplayer', path],
+                    ['docker', 'exec', '--user=root', '-it', self.namespace.container_name, 'chown', 'ctfplayer:ctfplayer', path],
                     check=True, capture_output=True,
                 )
                 return {"success": True, "path": path}
@@ -218,6 +222,8 @@ class Decompile(BaseTool):
     description = "Decompile a function from a binary using Ghidra"
     args_schema: Type[BaseModel] = DecompileInput
 
+    _decomp_cache: Dict = {}
+    namespace: Namespace = None
     def _run(
             self,
             binary: str,
@@ -240,7 +246,7 @@ class Decompile(BaseTool):
         basename = Path(binary).name
         if basename not in self._decomp_cache:
             self._decomp_cache[basename] = {}
-            decomp_output = SCRIPT_DIR / f"decomp/{self.challenge.category}/{self.challenge.chaldir.name}/{basename}.decomp.json"
+            decomp_output = SCRIPT_DIR / f"decomp/{self.namespace.challenge.category}/{self.namespace.challenge.chaldir.name}/{basename}.decomp.json"
             if decomp_output.exists():
                 self._decomp_cache[basename] = json.loads(decomp_output.read_text())
             else:
@@ -266,7 +272,7 @@ class Decompile(BaseTool):
         return {"decompilation": self._decomp_cache[basename][function]}
 
     def run_ghidra(self, binary, output):
-        binary_paths = self.challenge.chaldir.glob(f'**/{binary}')
+        binary_paths = self.namespace.challenge.chaldir.glob(f'**/{binary}')
         real_binary = next(binary_paths, None)
         if not real_binary or not real_binary.exists():
             return False
@@ -291,6 +297,9 @@ class Disassemble(BaseTool):
     description = "Disassemble a function from a binary using Ghidra"
     args_schema: Type[BaseModel] = DisassembleInput
 
+    _disasm_cache: Dict = {}
+    namespace: Namespace = None
+
     def _run(
             self,
             binary: str,
@@ -311,7 +320,7 @@ class Disassemble(BaseTool):
     def disassemble(self, binary, function):
         # Look for the disassembly output in "decomp"
         basename = Path(binary).name
-        disasm_output = SCRIPT_DIR / f"decomp/{self.challenge.category}/{self.challenge.chaldir.name}/{basename}.disas.json"
+        disasm_output = SCRIPT_DIR / f"decomp/{self.namespace.challenge.category}/{self.namespace.challenge.chaldir.name}/{basename}.disas.json"
 
         if basename not in self._disasm_cache:
             if disasm_output.exists():
@@ -340,7 +349,7 @@ class Disassemble(BaseTool):
         return {"disassembly": self._disasm_cache[basename][function]}
 
     def run_ghidra(self, binary, output):
-        binary_paths = self.challenge.chaldir.glob(f'**/{binary}')
+        binary_paths = self.namespace.challenge.chaldir.glob(f'**/{binary}')
         real_binary = next(binary_paths, None)
         if not real_binary or not real_binary.exists():
             return False
@@ -373,10 +382,10 @@ class GiveUp(BaseTool):
             return {
                 "error": {
                     "message": "You must confirm that you want to give up",
-                    "tool": "give_up"
+                    "tool": "give up"
                 }
             }
-        return {"give_up": True}
+        return {"give up": True}
 
 
 class TestInput(BaseModel):
