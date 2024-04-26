@@ -350,6 +350,7 @@ Please try again using your best judgment.
 def generate_tool_description_and_args(tools: List[BaseTool]):
     result = []
     for tool in tools:
+        tool = tool()
         func_args = {}
         args = tool.args
         for k, v in args.items():
@@ -368,11 +369,14 @@ class CTFConversation:
         # self.tool_choice = "auto"
         self.tool_choice = 'any'
         self.volume = self.chal.tmpdir
+        self.args.volume = self.volume
         # self.available_functions = {}
         # for tool in TOOLSETS.get(self.chal.category, TOOLSETS['default']):
         #     tool_instance = tool(self.chal, self.args.analysis)
         #     self.available_functions[tool_instance.name] = tool_instance
-        self.tools = TOOLSETS.get(self.chal.category, TOOLSETS['default'])
+        self.tools = []
+        for tool in TOOLSETS.get(self.chal.category, TOOLSETS['default']):
+            self.tools.append(tool(self.args))
         self.system_prompt = SYSTEM_MESSAGE.format(
             toolset=generate_tool_description_and_args(self.tools)
         )

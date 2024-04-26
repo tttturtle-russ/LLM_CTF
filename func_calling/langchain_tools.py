@@ -390,13 +390,13 @@ class GiveUp(BaseTool):
         return {"give_up": True}
 
 
-DEFAULT_TOOLSET = [RunCommand(), CheckFlag(), CreateFile(), Decompile(), Disassemble(), GiveUp()]
+DEFAULT_TOOLSET = [RunCommand, CheckFlag, CreateFile, Decompile, Disassemble, GiveUp]
 
 # Predefined sets of tools for different categories
 TOOLSETS = {
     # No binaries in the misc, forensics, or crypto categories
-    "crypto": [RunCommand(), CheckFlag(), CreateFile(), GiveUp()],
-    "misc": [RunCommand(), CheckFlag(), CreateFile(), GiveUp()],
-    "forensics": [RunCommand(), CheckFlag(), CreateFile(), GiveUp()],
+    "crypto": [RunCommand, CheckFlag, CreateFile, GiveUp],
+    "misc": [RunCommand, CheckFlag, CreateFile, GiveUp],
+    "forensics": [RunCommand, CheckFlag, CreateFile, GiveUp],
     "default": DEFAULT_TOOLSET,
 }
