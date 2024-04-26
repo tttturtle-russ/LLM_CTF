@@ -131,4 +131,4 @@ class MistralAgent(BaseChatModel):
 
 test = MistralAgent()
 
-test.invoke("how are you")
+print(test.invoke("how are you").content)
