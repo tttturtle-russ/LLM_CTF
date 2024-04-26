@@ -370,7 +370,7 @@ class CTFConversation:
         return itemgetter("arguments") | chosen_tool
 
     def __enter__(self):
-        ...
+        return self
         # status.system_message(SYSTEM_MESSAGE)
         # for tool in self.available_functions.values():
         #     tool.setup()
