@@ -23,7 +23,7 @@ class RunCommandInput(BaseModel):
 
 
 class RunCommand(BaseTool):
-    name = "run command"
+    name = "run_command"
     description = "Execute a command in an Ubuntu container (persistent across calls)"
     args_schema: Type[BaseModel] = RunCommandInput
 
@@ -63,7 +63,7 @@ class RunCommand(BaseTool):
             if p.returncode != 0:
                 return {"stdout": out, "stderr": err, "returncode": p.returncode, "timeout": False, "error": {
                     "message": f"Command failed with return code {p.returncode} and showed the following error: {err}",
-                    "tool": "runcommand"
+                    "tool": "run_command"
                 }}
             return {"stdout": out, "stderr": err, "returncode": p.returncode, "timeout": False}
         except subprocess.TimeoutExpired as e:
@@ -71,7 +71,7 @@ class RunCommand(BaseTool):
             err = self._clean(e.stderr)
             return {"stdout": out, "stderr": err, "returncode": None, "timeout": True, "error": {
                 "message": f"Command timed out after {timeout} seconds",
-                "tool": "runcommand"
+                "tool": "run_command"
             }
                     }
         except subprocess.CalledProcessError as e:
@@ -84,7 +84,7 @@ class RunCommand(BaseTool):
                 "timeout": False,
                 "error": {
                     "message": f"Command failed to with returncode {e.returncode} and showed the following error: {err}",
-                    "tool": "runcommand"
+                    "tool": "run_command"
                 }
             }
 
@@ -94,7 +94,7 @@ class CheckFlagInput(BaseModel):
 
 
 class CheckFlag(BaseTool):
-    name = "check flag"
+    name = "check_flag"
     description = "Check if a flag is correct"
     args_schema: Type[BaseModel] = CheckFlagInput
 
@@ -109,7 +109,7 @@ class CheckFlag(BaseTool):
             return {
                 "error": {
                     "message": "No flag provided",
-                    "tool": "checkflag"
+                    "tool": "check_flag"
                 }
             }
         if flag == self.real_flag:
@@ -128,7 +128,7 @@ class CreateFileInput(BaseModel):
 
 
 class CreateFile(BaseTool):
-    name = "create file"
+    name = "create_file"
     description = "create a file in the container with the given contents"
     args_schema: Type[BaseModel] = CreateFileInput
 
@@ -145,14 +145,14 @@ class CreateFile(BaseTool):
             return {
                 "error": {
                     "message": "No path provided",
-                    "tool": "create file"
+                    "tool": "create_file"
                 }
             }
         if contents is None:
             return {
                 "error": {
                     "message": "No contents provided",
-                    "tool": "create file"
+                    "tool": "create_file"
                 }
             }
         if decode_escapes is None:
@@ -176,7 +176,7 @@ class CreateFile(BaseTool):
                 return {
                     "error": {
                         "message": f"Invalid escape sequence in contents: {e}",
-                        "tool": "create file"
+                        "tool": "create_file"
                     }
                 }
 
@@ -208,7 +208,7 @@ class CreateFile(BaseTool):
                 return {
                     "error": {
                         "message": f"Error copying file into container: {e.stderr.decode('utf-8', errors='backslashreplace')}",
-                        "tool": "create file"
+                        "tool": "create_file"
                     }
                 }
 
@@ -219,7 +219,7 @@ class DecompileInput(BaseModel):
 
 
 class Decompile(BaseTool):
-    name = "decompile function"
+    name = "decompile_function"
     description = "Decompile a function from a binary using Ghidra"
     args_schema: Type[BaseModel] = DecompileInput
 
@@ -236,7 +236,7 @@ class Decompile(BaseTool):
             return {
                 "error": {
                     "message": f"No {binary} provided",
-                    "tool": "decompile function"
+                    "tool": "decompile_function"
                 }
             }
         if function is None:
@@ -256,7 +256,7 @@ class Decompile(BaseTool):
                     return {
                         "error": {
                             "message": f"Decompilation for {binary} not available",
-                            "tool": "decompile function"
+                            "tool": "decompile_function"
                         }
                     }
                 self._decomp_cache[basename] = json.loads(decomp_output.read_text())
@@ -268,7 +268,7 @@ class Decompile(BaseTool):
                 return {
                     "error": {
                         "message": f"Function {function} not found in {binary}",
-                        "tool": "decompile function"
+                        "tool": "decompile_function"
                     }
                 }
         return {"decompilation": self._decomp_cache[basename][function]}
@@ -295,7 +295,7 @@ class DisassembleInput(BaseModel):
 
 
 class Disassemble(BaseTool):
-    name = "disassemble function"
+    name = "disassemble_function"
     description = "Disassemble a function from a binary using Ghidra"
     args_schema: Type[BaseModel] = DisassembleInput
 
@@ -314,7 +314,7 @@ class Disassemble(BaseTool):
             return {
                 "error": {
                     "message": "No binary provided",
-                    "tool": "disassemble function"
+                    "tool": "disassemble_function"
                 }
             }
         return self.disassemble(binary, function)
@@ -332,7 +332,7 @@ class Disassemble(BaseTool):
                     return {
                         "error": {
                             "message": f"Disassembly for {binary} not available",
-                            "tool": "disassemble function"
+                            "tool": "disassemble_function"
                         }
                     }
                 self._disasm_cache[basename] = json.loads(disasm_output.read_text())
@@ -345,7 +345,7 @@ class Disassemble(BaseTool):
                 return {
                     "error": {
                         "message": f"Function {function} not found in {binary}",
-                        "tool": "disassemble function"
+                        "tool": "disassemble_function"
                     }
                 }
         return {"disassembly": self._disasm_cache[basename][function]}
@@ -371,7 +371,7 @@ class GiveUpInput(BaseModel):
 
 
 class GiveUp(BaseTool):
-    name = "give up"
+    name = "give_up"
     description = "Give up on the challenge"
     args_schema: Type[BaseModel] = GiveUpInput
 
@@ -384,10 +384,10 @@ class GiveUp(BaseTool):
             return {
                 "error": {
                     "message": "You must confirm that you want to give up",
-                    "tool": "give up"
+                    "tool": "give_up"
                 }
             }
-        return {"give up": True}
+        return {"give_up": True}
 
 
 DEFAULT_TOOLSET = [RunCommand(), CheckFlag(), CreateFile(), Decompile(), Disassemble(), GiveUp()]
