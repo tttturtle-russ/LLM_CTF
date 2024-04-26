@@ -63,7 +63,7 @@ class RunCommand(BaseTool):
             if p.returncode != 0:
                 return {"stdout": out, "stderr": err, "returncode": p.returncode, "timed_out": False, "error": {
                     "message": f"Command failed with return code {p.returncode} and showed the following error: {err}",
-                    "tool": "run_command"
+                    "tool": "run command"
                 }}
             return {"stdout": out, "stderr": err, "returncode": p.returncode, "timed_out": False}
         except subprocess.TimeoutExpired as e:
@@ -71,7 +71,7 @@ class RunCommand(BaseTool):
             err = self._clean(e.stderr)
             return {"stdout": out, "stderr": err, "returncode": None, "timed_out": True, "error": {
                 "message": f"Command timed out after {timeout} seconds",
-                "tool": "run_command"
+                "tool": "run command"
             }
                     }
         except subprocess.CalledProcessError as e:
@@ -84,7 +84,7 @@ class RunCommand(BaseTool):
                 "timed_out": False,
                 "error": {
                     "message": f"Command failed to with returncode {e.returncode} and showed the following error: {err}",
-                    "tool": "run_command"
+                    "tool": "run command"
                 }
             }
 
