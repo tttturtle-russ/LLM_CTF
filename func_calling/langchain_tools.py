@@ -51,8 +51,8 @@ class RunCommand(BaseTool):
 
     def _run(self, command, timeout: Optional[int] = 10,
              run_manager: Optional[CallbackManagerForToolRun] = None) -> Dict:
-        self.start_docker()
         print(f"Running command: {command}")
+        self.start_docker()
         try:
             p = subprocess.run(
                 ['docker', 'exec', self.container_name, 'bash', '-c', command],
