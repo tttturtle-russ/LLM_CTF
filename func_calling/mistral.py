@@ -1,15 +1,19 @@
+from operator import itemgetter
 from typing import Optional, List, Any
 
 import openai
 from langchain_core.callbacks import CallbackManagerForLLMRun
 from langchain_core.language_models import BaseChatModel, LanguageModelInput
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
+from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.outputs import ChatResult, ChatGeneration
 from langchain_core.prompt_values import PromptValue
+from langchain.tools.render import render_text_description
 from openai import OpenAI
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 from langchain.llms.base import LLM
 from rich import print
+from langchain_tools import *
 import torch
 
 
@@ -62,6 +66,7 @@ class Mistral(LLM):
 class MistralAgent(BaseChatModel):
     name = "Mistral"
     model_name = "/home/haoyang/Mistral-7B-Instruct-v0.2"
+
     # client = OpenAI(
     #     api_key="na",
     #     base_url="http://localhost:8000/v1"
@@ -84,7 +89,7 @@ class MistralAgent(BaseChatModel):
             **kwargs: Any,
     ) -> ChatResult:
         openai.base_url = "http://localhost:8000/v1/"
-        openai.api_key="na"
+        openai.api_key = "na"
         print(messages)
         last_message = messages[-1]
         print(last_message.content)
@@ -113,6 +118,27 @@ class MistralAgent(BaseChatModel):
         return "Mistral-7B-Instruct-v0.2"
 
 
-test = MistralAgent()
+model = MistralAgent()
+tools = [RunCommand, CheckFlag, CreateFile, Disassemble, Decompile, TestTool]
 
-print(test.invoke("write me a quick sort algorithm in C").content)
+rendered_tools = render_text_description(tools)
+system_prompt = f"""You are an assistant that has access to the following set of tools. Here are the names and descriptions for each tool:
+
+{rendered_tools}
+
+Given the user input, return the name and input of the tool to use. Return your response as a JSON blob with 'name' and 'arguments' keys."""
+
+
+def tool_chain(model_output):
+    tool_map = {tool.name: tool for tool in tools}
+    chosen_tool = tool_map[model_output["name"]]
+    return itemgetter("arguments") | chosen_tool
+
+
+prompt = ChatPromptTemplate.from_messages(
+    [("user", system_prompt + "{input}")]
+)
+
+chain = prompt | model | JsonOutputParser() | tool_chain
+
+print(chain.invoke({"input": "what is the result of 43242342352352 plus 38693635435933"}))
