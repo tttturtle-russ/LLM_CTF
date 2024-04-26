@@ -1,7 +1,8 @@
 import json
 import tempfile
+from argparse import Namespace
 from pathlib import Path
-from typing import Optional, Type, Dict
+from typing import Optional, Type, Dict, Union
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import BaseTool
 from langchain.tools.render import render_text_description_and_args
@@ -26,7 +27,7 @@ class RunCommand(BaseTool):
     description = "Execute a command in an Ubuntu container (persistent across calls)"
     args_schema: Type[BaseModel] = RunCommandInput
 
-    volume = None
+    args: Namespace = None
 
     def start_docker(self):
         if self.volume:
@@ -51,6 +52,7 @@ class RunCommand(BaseTool):
     def _run(self, command, timeout: Optional[int] = 10,
              run_manager: Optional[CallbackManagerForToolRun] = None) -> Dict:
         self.start_docker()
+        print(f"Running command: {command}")
         try:
             p = subprocess.run(
                 ['docker', 'exec', self.container_name, 'bash', '-c', command],
@@ -406,4 +408,3 @@ TOOLSETS = {
     "forensics": [RunCommand, CheckFlag, CreateFile, GiveUp],
     "default": DEFAULT_TOOLSET,
 }
-

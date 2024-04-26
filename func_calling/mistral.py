@@ -3,17 +3,15 @@ from typing import List, Any
 
 import openai
 from langchain_core.callbacks import CallbackManagerForLLMRun
-from langchain_core.language_models import BaseChatModel, LanguageModelInput
+from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.outputs import ChatResult, ChatGeneration
-from langchain.tools.render import render_text_description
 from langchain_core.runnables import RunnablePassthrough
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
-from langchain.llms.base import LLM
+from langchain_core.prompts import MessagesPlaceholder
 from rich import print
 from langchain_tools import *
-import torch
+
 
 openai.base_url = "http://localhost:8000/v1/"
 openai.api_key = "na"
@@ -22,11 +20,6 @@ openai.api_key = "na"
 class MistralAgent(BaseChatModel):
     name = "Mistral"
     model_name = "/home/haoyang/Mistral-7B-Instruct-v0.2"
-
-    # client = OpenAI(
-    #     api_key="na",
-    #     base_url="http://localhost:8000/v1"
-    # )
 
     @staticmethod
     def convert_messages(messages: List[BaseMessage]):
@@ -88,7 +81,11 @@ def tool_chain(model_output):
 
 
 prompt = ChatPromptTemplate.from_messages(
-    [("user", system_prompt + "{input}")]
+    [
+        ("user", system_prompt + "{challenge}"),
+        MessagesPlaceholder("assistant"),
+        ("user", "{input}")
+    ]
 )
 
 print(system_prompt)
