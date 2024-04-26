@@ -42,6 +42,7 @@ class RunCommand(BaseTool):
             ['--name', self.namespace.container_name, self.namespace.container_image],
             check=True, capture_output=True,
         )
+        print(f"Exec docker run {' '.join(volumes)} --network {self.namespace.network} --platform linux/amd64 -d --rm --name {self.namespace.container_name} {self.namespace.container_image}")
 
     @staticmethod
     def _clean(text):
@@ -52,6 +53,7 @@ class RunCommand(BaseTool):
     def _run(self, command, timeout: Optional[int] = 10,
              run_manager: Optional[CallbackManagerForToolRun] = None) -> Dict:
         print(f"Running command: {command}")
+        print(f"In container: {self.namespace.container_name}")
         self.start_docker()
         try:
             p = subprocess.run(
