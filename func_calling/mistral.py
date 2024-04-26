@@ -101,16 +101,18 @@ class MistralAgent(BaseChatModel):
         print(last_message.content)
         template_message = self.convert_messages(messages)
         print(template_message)
-        inputs = self.tokenizer.apply_chat_template(template_message, return_tensors="pt")
+        inputs = self.tokenizer.apply_chat_template(template_message, return_tensors="pt").to(torch.cuda.current_device())
+        print("apply chat template")
         outputs = self.model.generate(
             inputs,
             max_new_tokens=500,
-            pad_token_id=self.tokenizer.pad_token_id,
+            pad_token_id=self.tokenizer.eos_token_id,
             eos_token_id=self.tokenizer.eos_token_id,
             temperature=1.0,
             top_p=1.0
         )
-        resp = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+        print("generate outputs")
+        resp = self.tokenizer.decode(outputs.squeeze(), skip_special_tokens=True)
         print(resp)
         return ChatResult(
             generations=[
