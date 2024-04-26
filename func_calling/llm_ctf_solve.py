@@ -376,8 +376,8 @@ class CTFConversation:
         )
         self.chain = (prompt
                       | MistralAgent()
-                      # | JsonOutputParser()
-                      | CommaSeparatedListOutputParser()
+                      | JsonOutputParser()
+                      # | CommaSeparatedListOutputParser()
                       | RunnablePassthrough.assign(output=self.tool_chain))
 
     def tool_chain(self, model_output):
