@@ -381,8 +381,8 @@ class TestInput(BaseModel):
 
 
 class TestTool(BaseTool):
-    name = "add"
-    description = "add two numbers together"
+    name = "exp"
+    description = "exp two numbers"
     args_schema: Type[BaseModel] = TestInput
 
     def _run(
@@ -391,7 +391,7 @@ class TestTool(BaseTool):
             num2: int = 2,
             run_manager: Optional[CallbackManagerForToolRun] = None
     ) -> Dict:
-        return {"sum": num1 + num2}
+        return {"exp": num1 ** num2}
 
 
 DEFAULT_TOOLSET = [RunCommand(), CheckFlag(), CreateFile(), Decompile(), Disassemble(), GiveUp(), TestTool()]
