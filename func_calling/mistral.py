@@ -8,6 +8,7 @@ from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.outputs import ChatResult, ChatGeneration
 from langchain.tools.render import render_text_description
+from langchain_core.runnables import RunnablePassthrough
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 from langchain.llms.base import LLM
 from rich import print
@@ -136,6 +137,6 @@ prompt = ChatPromptTemplate.from_messages(
 
 print(system_prompt)
 
-chain = prompt | model | JsonOutputParser() | tool_chain
+chain = prompt | model | JsonOutputParser() | RunnablePassthrough.assign(output=tool_chain)
 
-print(chain.invoke("What is the result of 4234234 plus 83489583495"))
+print(chain.invoke({"input": "What is the result of 4234234 plus 83489583495"}))
