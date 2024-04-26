@@ -59,7 +59,7 @@ class Mistral(LLM):
 class MistralAgent(BaseChatModel):
     name = "Mistral"
     model_id = "/home/haoyang/Mistral-7B-Instruct-v0.2"
-    model = AutoModelForCausalLM.from_pretrained(model_id)
+    model = AutoModelForCausalLM.from_pretrained(model_id).cuda()
     tokenizer = AutoTokenizer.from_pretrained(
         model_id,
         device_map='auto',
