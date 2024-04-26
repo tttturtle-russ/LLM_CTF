@@ -19,6 +19,16 @@ openai.base_url = "http://localhost:8000/v1/"
 openai.api_key = "na"
 
 
+def tool_chain(model_output, tools):
+    tool_map = {tool.name: tool for tool in tools}
+
+    def chain(_model_output):
+        chosen_tool = tool_map[_model_output["name"]]
+        return itemgetter("arguments") | chosen_tool
+
+    return chain
+
+
 class MistralAgent(BaseChatModel):
     name = "Mistral"
     model_name = "/home/haoyang/Mistral-7B-Instruct-v0.2"

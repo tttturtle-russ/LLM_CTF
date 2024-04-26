@@ -1,6 +1,8 @@
 import logging
 from datetime import datetime
 import re
+from operator import itemgetter
+
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from openai import OpenAI
@@ -360,7 +362,12 @@ class CTFConversation:
                 ("user", "{input}")
             ]
         )
-        self.chain = prompt | MistralAgent() | JsonOutputParser() | RunnablePassthrough.assign(output=self.tools)
+        self.chain = prompt | MistralAgent() | JsonOutputParser() | RunnablePassthrough.assign(output=self.tool_chain)
+
+    def tool_chain(self, model_output):
+        tool_map = {tool.name: tool for tool in self.tools}
+        chosen_tool = tool_map[model_output["name"]]
+        return itemgetter("arguments") | chosen_tool
 
     def __enter__(self):
         ...
