@@ -109,12 +109,10 @@ class MistralAgent(BaseChatModel):
             top_p=1.0
         )
         resp = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-        print(resp)
         return ChatResult(
             generations=[
                 ChatGeneration(
-                    text=resp[0]["generated_text"],
-                    score=resp[0]["score"],
+                    text=resp,
                     model=self.name,
                     model_id=self.model_id,
                 )
