@@ -442,19 +442,19 @@ class CTFConversation:
     #     return tool_results
 
     def _parse_tool_calls_by_name(self, tool_name, response):
-        if tool_name == 'give up':
+        if tool_name == 'give_up':
             if response['output']['give up'] is True:
                 raise GiveUpException()
             else:
                 return {"error": response['output']['error']['message']}
-        elif tool_name == 'runcommand':
+        elif tool_name == 'run_command':
             stdout = response['output']['stdout']
             stderr = response['output']['stderr']
             returncode = response['output']['returncode']
             if returncode != 0:
                 return {"error": f"Command failed with return code {returncode}: {stderr}"}
             return {"stdout": stdout, "stderr": stderr}
-        elif tool_name == 'checkflag':
+        elif tool_name == 'check_flag':
             if 'correct' in response['output']:
                 if response['output']['correct'] is True:
                     self.chal.solved = True
@@ -464,19 +464,19 @@ class CTFConversation:
             else:
                 error = response['output']['error']
                 return {"error": f"{error['tool']} failed with error: {error['message']}"}
-        elif tool_name == 'createfile':
+        elif tool_name == 'create_file':
             if 'success' in response['output'] and response['output']['success'] is True:
                 return {"success": True, "path": response['output']['path']}
             else:
                 error = response['output']['error']
                 return {"error": f"{error['tool']} failed with error: {error['message']}"}
-        elif tool_name == 'decompile function':
+        elif tool_name == 'decompile_function':
             if 'decompilation' in response['output']:
                 return {"decompilation": response['output']['decompilation']}
             else:
                 error = response['output']['error']
                 return {"error": f"{error['tool']} failed with error: {error['message']}"}
-        elif tool_name == 'disassemble function':
+        elif tool_name == 'disassemble_function':
             if 'disassembly' in response['output']:
                 return {"disassembly": response['output']['disassembly']}
             else:
