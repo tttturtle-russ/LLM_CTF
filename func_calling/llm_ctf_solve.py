@@ -220,6 +220,8 @@ server (if applicable).\n
 Also you have access to a set of tools that can be used to solve the challenge.
 They are showed as follows: \n
 {toolset}
+
+Given the user input, return the name and input of the tool to use. Return your response as a JSON blob with 'name' and 'arguments' keys.
 """
 
 SYSTEM_MESSAGE = """\
