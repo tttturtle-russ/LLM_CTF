@@ -98,7 +98,8 @@ class CheckFlag(BaseTool):
     description = "Check if a flag is correct"
     args_schema: Type[BaseModel] = CheckFlagInput
 
-    real_flag: str = "flag{this_is_the_flag}"
+    namespace: Namespace = None
+    real_flag: str = None
 
     def _run(
             self,
@@ -375,6 +376,8 @@ class GiveUp(BaseTool):
     description = "Give up on the challenge"
     args_schema: Type[BaseModel] = GiveUpInput
 
+    namespace: Namespace = None
+
     def _run(
             self,
             confirm: bool = False,
@@ -390,13 +393,13 @@ class GiveUp(BaseTool):
         return {"give_up": True}
 
 
-DEFAULT_TOOLSET = [RunCommand, CheckFlag, CreateFile, Decompile, Disassemble, GiveUp]
+DEFAULT_TOOLSET = [RunCommand(), CheckFlag(), CreateFile(), Decompile(), Disassemble(), GiveUp()]
 
 # Predefined sets of tools for different categories
 TOOLSETS = {
     # No binaries in the misc, forensics, or crypto categories
-    "crypto": [RunCommand, CheckFlag, CreateFile, GiveUp],
-    "misc": [RunCommand, CheckFlag, CreateFile, GiveUp],
-    "forensics": [RunCommand, CheckFlag, CreateFile, GiveUp],
+    "crypto": [RunCommand(), CheckFlag(), CreateFile(), GiveUp()],
+    "misc": [RunCommand(), CheckFlag(), CreateFile(), GiveUp()],
+    "forensics": [RunCommand(), CheckFlag(), CreateFile(), GiveUp()],
     "default": DEFAULT_TOOLSET,
 }

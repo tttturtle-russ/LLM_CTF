@@ -350,7 +350,6 @@ Please try again using your best judgment.
 def generate_tool_description_and_args(tools: List[BaseTool]):
     result = []
     for tool in tools:
-        tool = tool()
         func_args = {}
         args = tool.args
         for k, v in args.items():
@@ -374,9 +373,11 @@ class CTFConversation:
         # for tool in TOOLSETS.get(self.chal.category, TOOLSETS['default']):
         #     tool_instance = tool(self.chal, self.args.analysis)
         #     self.available_functions[tool_instance.name] = tool_instance
-        self.tools = []
-        for tool in TOOLSETS.get(self.chal.category, TOOLSETS['default']):
-            self.tools.append(tool(namespace=self.args))
+        self.tools = TOOLSETS.get(self.chal.category, TOOLSETS['default'])
+        for tool in self.tools:
+            if tool.name == "check_flag":
+                tool.real_flag = self.chal.real_flag
+            tool.namespace = args
         self.system_prompt = SYSTEM_MESSAGE.format(
             toolset=generate_tool_description_and_args(self.tools)
         )
