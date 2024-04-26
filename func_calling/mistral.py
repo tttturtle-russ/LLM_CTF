@@ -1,8 +1,9 @@
 from typing import Optional, List, Any
 from langchain_core.callbacks import CallbackManagerForLLMRun
-from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import BaseMessage
+from langchain_core.language_models import BaseChatModel, LanguageModelInput
+from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_core.outputs import ChatResult, ChatGeneration
+from langchain_core.prompt_values import PromptValue
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 from langchain.llms.base import LLM
 import torch
@@ -78,6 +79,15 @@ class MistralAgent(BaseChatModel):
         do_sample=True,
     )
 
+    @staticmethod
+    def convert_messages(messages: List[BaseMessage]):
+        return [
+            {"role": "user", "content": message.content}
+            if isinstance(message, HumanMessage)
+            else {"role": "assistant", "content": message.content}
+            for message in messages
+        ]
+
     def _generate(
             self,
             messages: List[BaseMessage],
@@ -88,7 +98,8 @@ class MistralAgent(BaseChatModel):
         print(messages)
         last_message = messages[-1]
         print(last_message.content)
-        inputs = self.tokenizer.apply_chat_template(messages, return_tensors="pt")
+        template_message = self.convert_messages(messages)
+        inputs = self.tokenizer.apply_chat_template(template_message, return_tensors="pt")
         outputs = self.model.generate(
             inputs,
             max_new_tokens=500,
