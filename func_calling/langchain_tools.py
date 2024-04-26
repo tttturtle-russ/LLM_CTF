@@ -372,7 +372,7 @@ class GiveUp(BaseTool):
                     "tool": "give_up"
                 }
             }
-        raise GiveUpException()
+        return {"give_up": True}
 
 
 class TestInput(BaseModel):
