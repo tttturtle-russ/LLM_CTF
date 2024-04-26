@@ -58,6 +58,7 @@ class MistralAgent(BaseChatModel):
             messages=self._messages,
             model=self.model_name,
         )
+        print(resp)
         self._messages.append({"role": "assistant", "content": resp.choices[0].message.content})
         status.assistant_message(resp.choices[0].message.content)
         return ChatResult(
