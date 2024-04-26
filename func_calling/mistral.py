@@ -51,7 +51,7 @@ class MistralAgent(BaseChatModel):
             run_manager: Optional[CallbackManagerForLLMRun] = None,
             **kwargs: Any,
     ) -> ChatResult:
-        status.user_message(messages[-1])
+        status.user_message(messages[-1].content)
         self._messages.append(HumanMessage(content=messages[-1].content))
         # template_message = self.convert_messages(self._messages)
         resp = openai.chat.completions.create(
