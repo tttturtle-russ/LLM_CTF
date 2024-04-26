@@ -59,8 +59,7 @@ class Mistral(LLM):
 
 class MistralAgent(BaseChatModel):
     name = "Mistral"
-    model_id = "/home/haoyang/Mistral-7B-Instruct-v0.2"
-    model = AutoModelForCausalLM.from_pretrained(model_id)
+    model_name = "/home/haoyang/Mistral-7B-Instruct-v0.2"
     client = OpenAI(
         api_key="na",
         base_url="http://localhost:8000/v1"
@@ -88,7 +87,7 @@ class MistralAgent(BaseChatModel):
         template_message = self.convert_messages(messages)
         resp = self.client.chat.completions.create(
             messages=template_message,
-            model=self.model_id,
+            model=self.model_name,
         )
         print(resp)
         return ChatResult(
