@@ -85,6 +85,7 @@ class MistralAgent(BaseChatModel):
             run_manager: Optional[CallbackManagerForLLMRun] = None,
             **kwargs: Any,
     ) -> ChatResult:
+        print(messages)
         last_message = messages[-1]
         print(last_message.content)
         inputs = self.tokenizer.apply_chat_template(messages, return_tensors="pt")
