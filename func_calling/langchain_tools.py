@@ -389,25 +389,28 @@ class GiveUp(BaseTool):
 
 
 class TestInput(BaseModel):
-    num1: int = Field(description="a number", default=1)
-    num2: int = Field(description="another number", default=2)
+    # num1: int = Field(description="a number", default=1)
+    # num2: int = Field(description="another number", default=2)
+    command: str = Field(description="command to run", default="echo 'hello world'")
 
 
 class TestTool(BaseTool):
-    name = "exp"
-    description = "exp two numbers"
+    name = "run command"
+    description = "run given command by using subprocess.run()"
     args_schema: Type[BaseModel] = TestInput
 
     def _run(
             self,
-            num1: int = 1,
-            num2: int = 2,
+            command: str = "echo 'hello world'",
+            # num1: int = 1,
+            # num2: int = 2,
             run_manager: Optional[CallbackManagerForToolRun] = None
     ) -> Dict:
-        return {"exp": num1 ** num2}
+        p = subprocess.run([command], check=True, capture_output=True)
+        return {"stdout": p.stdout.decode(), "stderr": p.stderr.decode(), "returncode": p.returncode}
 
 
-DEFAULT_TOOLSET = [RunCommand(), CheckFlag(), CreateFile(), Decompile(), Disassemble(), GiveUp(), TestTool()]
+DEFAULT_TOOLSET = [CheckFlag(), CreateFile(), Decompile(), Disassemble(), GiveUp(), TestTool()]
 
 # Predefined sets of tools for different categories
 TOOLSETS = {

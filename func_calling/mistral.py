@@ -63,7 +63,18 @@ class MistralAgent(BaseChatModel):
 
 
 model = MistralAgent()
-tools = [RunCommand(), CheckFlag(), CreateFile(), Disassemble(), Decompile(), GiveUp(), TestTool()]
+testNamespace = Namespace(
+    challenge_json='chals/pwn/double_zer0_dilemma/challenge.json',
+    quiet=False,
+    debug=True,
+    model='/home/haoyang/Mistral-7B-Instruct-v0.2',
+    container_image='ctfenv',
+    network='ctfnet',
+    max_rounds=30,
+    logfile='logs/pwn/double_zer0_dilemma/conversation.Mistral-7B-Instruct-v0.2.1.json',
+    analysis='analysis/pwn/double_zer0_dilemma/analysis.Mistral-7B-Instruct-v0.2.1.json'
+)
+tools = [CheckFlag(), CreateFile(), Disassemble(), Decompile(), GiveUp(), TestTool()]
 
 rendered_tools = render_text_description_and_args(tools).replace("{", "{{").replace("}", "}}")
 
