@@ -65,7 +65,7 @@ class MistralAgent(BaseChatModel):
         torch_dtype=torch.float16,
         load_in_8bit=False
     )
-    pipe = pipeline(
+    _pipe = pipeline(
         "text-generation",
         model=model,
         tokenizer=tokenizer,
@@ -109,7 +109,7 @@ class MistralAgent(BaseChatModel):
         #     top_p=1.0
         # )
         # resp = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-        resp = self.pipe(last_message.content)
+        resp = self._pipe(last_message.content)
         print(resp)
         return ChatResult(
             generations=[
