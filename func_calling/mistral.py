@@ -116,7 +116,7 @@ class MistralAgent(BaseChatModel):
 
 model = MistralAgent()
 tools = [RunCommand(), CheckFlag(), CreateFile(), Disassemble(), Decompile(), TestTool()]
-print(str(tools[1].args_schema))
+print(str(tools[1].args))
 rendered_tools = render_text_description_and_args(tools)
 
 print(rendered_tools)
