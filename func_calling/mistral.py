@@ -93,9 +93,9 @@ def tool_chain(model_output):
 
 prompt = ChatPromptTemplate.from_messages(
     [
-        ("user", "{initial_message}"),
-        MessagesPlaceholder("chat_history"),
-        ("user", "{input}")
+        ("user", system_prompt + "{input}"),
+        # MessagesPlaceholder("chat_history"),
+        # ("user", "{input}")
     ]
 )
 
