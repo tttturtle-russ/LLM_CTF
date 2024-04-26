@@ -1,32 +1,16 @@
-from operator import itemgetter
 from typing import List, Any
 
 import openai
-from langchain.chains.llm import LLMChain
 from langchain_core.callbacks import CallbackManagerForLLMRun
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
-from langchain_core.output_parsers import JsonOutputParser, XMLOutputParser
 from langchain_core.outputs import ChatResult, ChatGeneration
-from langchain_core.runnables import RunnablePassthrough
-from langchain_core.prompts import MessagesPlaceholder
-from rich import print
 from langchain_tools import *
 
 from ctflogging import status
 
 openai.base_url = "http://localhost:8000/v1/"
 openai.api_key = "na"
-
-
-def tool_chain(model_output, tools):
-    tool_map = {tool.name: tool for tool in tools}
-
-    def chain(_model_output):
-        chosen_tool = tool_map[_model_output["name"]]
-        return itemgetter("arguments") | chosen_tool
-
-    return chain
 
 
 class MistralAgent(BaseChatModel):
