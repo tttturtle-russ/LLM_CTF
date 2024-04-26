@@ -227,9 +227,8 @@ Thought: your reasoning for determining the next action based on the [User Input
 Action: the tool that you choose to use, which must be a single valid tool name from [Tool Specifications].
 Action Input: the input to the tool, which should be a JSON object with necessary fields matching the tool's [Arguments] specifications, e.g., {{"arg1": "value1", "arg2": "value2"}}. The JSON object should be parsed by Python `json.loads`.
 
-Remember you only gives one of each [Tought], [Action], [Action Input] every turn. After giving them, you should end your response for this turn and wait for the [Observation] from the tool execution before giving the next [Thought], [Action], [Action Input].
-Observation: the execution result of the tool, which should be a JSON object with fields matching the tool's [Returns] specifications, e.g., {{"return1": "value1", "return2": "value2"}}.
-
+After giving your response, you should end your response for this turn and wait for the user's next input, which will be the [Observation] of the tool's output.
+And you need to construct your next response based on the [Observation].
 Once you have finished all your actions and are able to synthesize a thoughtful response for the User, ensure that you end your response by incorporating the final answer as follows:
 
 Final Answer: your final response to the User.
