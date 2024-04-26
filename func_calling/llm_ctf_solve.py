@@ -229,6 +229,7 @@ Action Input: the input to the tool, which should be a JSON object with necessar
 
 After giving your response, you should end your response for this turn and wait for the user's next input, which will be the [Observation] of the tool's output.
 And you need to construct your next response based on the [Observation].
+** Remember! Before next [Observation], you should response nothing. **
 Once you have finished all your actions and are able to synthesize a thoughtful response for the User, ensure that you end your response by incorporating the final answer as follows:
 
 Final Answer: your final response to the User.
