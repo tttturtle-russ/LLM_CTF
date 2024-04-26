@@ -116,7 +116,7 @@ class MistralAgent(BaseChatModel):
 model = MistralAgent()
 tools = [RunCommand(), CheckFlag(), CreateFile(), Disassemble(), Decompile(), TestTool()]
 
-rendered_tools = render_text_description(tools)
+rendered_tools = render_text_description_and_args(tools)
 system_prompt = f"""You are an assistant that has access to the following set of tools. Here are the names and descriptions for each tool:
 
 {rendered_tools}
