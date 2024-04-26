@@ -98,11 +98,11 @@ class CheckFlag(BaseTool):
     description = "Check if a flag is correct"
     args_schema: Type[BaseModel] = CheckFlagInput
 
-    real_flag: str = None
+    real_flag: str = "flag{this_is_the_flag}"
 
     def _run(
             self,
-            flag: str,
+            flag: str = None,
             run_manager: Optional[CallbackManagerForToolRun] = None
     ) -> Dict:
         if flag is None:
@@ -199,7 +199,8 @@ class CreateFile(BaseTool):
                 )
                 # Set ownership to ctfplayer
                 subprocess.run(
-                    ['docker', 'exec', '--user=root', '-it', self.namespace.container_name, 'chown', 'ctfplayer:ctfplayer', path],
+                    ['docker', 'exec', '--user=root', '-it', self.namespace.container_name, 'chown',
+                     'ctfplayer:ctfplayer', path],
                     check=True, capture_output=True,
                 )
                 return {"success": True, "path": path}
@@ -224,6 +225,7 @@ class Decompile(BaseTool):
 
     _decomp_cache: Dict = {}
     namespace: Namespace = None
+
     def _run(
             self,
             binary: str,
