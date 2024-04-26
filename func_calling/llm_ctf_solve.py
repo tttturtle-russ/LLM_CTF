@@ -226,6 +226,8 @@ The tool-use [Scratchpad] documents the history of tool usage, which is formatte
 Thought: your reasoning for determining the next action based on the [User Input], previous [Action]s, and previous [Observation]s.
 Action: the tool that you choose to use, which must be a single valid tool name from [Tool Specifications].
 Action Input: the input to the tool, which should be a JSON object with necessary fields matching the tool's [Arguments] specifications, e.g., {{"arg1": "value1", "arg2": "value2"}}. The JSON object should be parsed by Python `json.loads`.
+
+Remember you only gives one of each [Tought], [Action], [Action Input] at a time. After giving it, you should wait for the [Observation] from the tool execution before giving the next [Thought], [Action], [Action Input].
 Observation: the execution result of the tool, which should be a JSON object with fields matching the tool's [Returns] specifications, e.g., {{"return1": "value1", "return2": "value2"}}.
 
 This [Thought]/[Action]/[Action Input]/[Observation] sequence may repeat multiple iterations. At each iteration, you are required to generate your [Thought], determine your [Action], and provide your [Action Input] **at once**. After that, you need to wait to receive an [Observation] from tool execution which will inform your next iteration. Continue this process for multiple rounds as needed.
