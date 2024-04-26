@@ -88,15 +88,11 @@ class MistralAgent(BaseChatModel):
     ) -> ChatResult:
         openai.base_url = "http://localhost:8000/v1/"
         openai.api_key = "na"
-        print(messages)
-        last_message = messages[-1]
-        print(last_message.content)
         template_message = self.convert_messages(messages)
         resp = openai.chat.completions.create(
             messages=template_message,
             model=self.model_name,
         )
-        print(resp)
         return ChatResult(
             generations=[
                 ChatGeneration(
