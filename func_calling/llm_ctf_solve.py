@@ -355,7 +355,7 @@ def generate_tool_description_and_args(tools: List[BaseTool]):
         for k, v in args.items():
             func_args[k] = v['type']
         result.append(f"{tool.name}: {json.dumps(func_args)}")
-    return "\n".join(result)
+    return "\n\n".join(result)
 
 
 class CTFConversation:
@@ -491,9 +491,13 @@ class CTFConversation:
     def run(self, message):
         self.messages.append({"role": "user", "content": message})
         self.log.log(f"User: {message}")
-        response = self.chain.invoke({
-            "input": message
-        })
+        try:
+            response = self.chain.invoke({
+                "input": message
+            })
+        except KeyError as e:
+            self.log.log(f"Exception: {e}")
+            return f"Unknown tool {response['name']}"
         tool_result = self.parse_tool_calls(response)
         if 'error' in tool_result:
             return tool_result['error']
