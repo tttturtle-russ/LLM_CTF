@@ -300,7 +300,7 @@ class Disassemble(BaseTool):
                 "error": {
                     "message": "No binary provided",
                     "tool": "disassemble_function"
-                    }
+                }
             }
         return self.disassemble(binary, function)
 
@@ -374,13 +374,15 @@ class GiveUp(BaseTool):
             }
         raise GiveUpException()
 
+
 class TestInput(BaseModel):
     a: int = Field(description="a number", default=1)
     b: int = Field(description="another number", default=2)
 
+
 class TestTool(BaseTool):
-    name = "test"
-    description = "test tool"
+    name = "add"
+    description = "add two numbers together"
     args_schema: Type[BaseModel] = TestInput
 
     def _run(
@@ -390,6 +392,7 @@ class TestTool(BaseTool):
             run_manager: Optional[CallbackManagerForToolRun] = None
     ) -> Dict:
         return {"sum": a + b}
+
 
 DEFAULT_TOOLSET = [RunCommand(), CheckFlag(), CreateFile(), Decompile(), Disassemble(), GiveUp(), TestTool()]
 
