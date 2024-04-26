@@ -52,13 +52,13 @@ class MistralAgent(BaseChatModel):
             **kwargs: Any,
     ) -> ChatResult:
         status.user_message(messages[-1].content)
-        self._messages.append(HumanMessage(content=messages[-1].content))
+        self._messages.append({"role": "user", "content": messages[-1].content})
         # template_message = self.convert_messages(self._messages)
         resp = openai.chat.completions.create(
             messages=self._messages,
             model=self.model_name,
         )
-        self._messages.append(AIMessage(content=resp.choices[0].message.content))
+        self._messages.append({"role": "assistant", "content": resp.choices[0].message.content})
         status.assistant_message(resp.choices[0].message.content)
         return ChatResult(
             generations=[
