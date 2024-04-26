@@ -376,7 +376,7 @@ class CTFConversation:
         #     self.available_functions[tool_instance.name] = tool_instance
         self.tools = []
         for tool in TOOLSETS.get(self.chal.category, TOOLSETS['default']):
-            self.tools.append(tool(self.args))
+            self.tools.append(tool(namespace=self.args))
         self.system_prompt = SYSTEM_MESSAGE.format(
             toolset=generate_tool_description_and_args(self.tools)
         )
