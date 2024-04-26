@@ -371,7 +371,7 @@ class CTFConversation:
         self.tool_choice = 'any'
         self.volume = self.chal.tmpdir
         self.args.volume = self.volume
-        self.args.container_name = self.chal.container_name
+        self.args.container_name = self.chal.challenge_container
         # self.available_functions = {}
         # for tool in TOOLSETS.get(self.chal.category, TOOLSETS['default']):
         #     tool_instance = tool(self.chal, self.args.analysis)
