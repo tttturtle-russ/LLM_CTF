@@ -59,8 +59,6 @@ class MistralAgent(BaseChatModel):
             model=self.model_name,
         )
         resp.choices[0].message.content.replace("\\", "")
-        print(resp.choices[0].message.content)
-        print(resp)
         self._messages.append({"role": "assistant", "content": resp.choices[0].message.content})
         status.assistant_message(resp.choices[0].message.content)
         return ChatResult(
