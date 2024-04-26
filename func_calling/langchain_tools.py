@@ -283,7 +283,7 @@ class DisassembleInput(BaseModel):
 
 
 class Disassemble(BaseTool):
-    name = "disassemble_function"
+    name = "disassemble function"
     description = "Disassemble a function from a binary using Ghidra"
     args_schema: Type[BaseModel] = DisassembleInput
 
@@ -356,7 +356,7 @@ class GiveUpInput(BaseModel):
 
 
 class GiveUp(BaseTool):
-    name = "give_up"
+    name = "give up"
     description = "Give up on the challenge"
     args_schema: Type[BaseModel] = GiveUpInput
 
