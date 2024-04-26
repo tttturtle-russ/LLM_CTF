@@ -406,7 +406,7 @@ class TestTool(BaseTool):
             # num2: int = 2,
             run_manager: Optional[CallbackManagerForToolRun] = None
     ) -> Dict:
-        p = subprocess.run([command], check=True, capture_output=True)
+        p = subprocess.run(command, check=True, capture_output=True)
         return {"stdout": p.stdout.decode(), "stderr": p.stderr.decode(), "returncode": p.returncode}
 
 
