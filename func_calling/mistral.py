@@ -134,6 +134,8 @@ prompt = ChatPromptTemplate.from_messages(
     [("user", system_prompt + "{input}")]
 )
 
+print(system_prompt)
+
 chain = prompt | model | JsonOutputParser() | tool_chain
 
 print(chain.invoke({"input": "what is the result of 43242342352352 plus 38693635435933"}))
