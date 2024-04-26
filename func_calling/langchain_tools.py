@@ -395,7 +395,7 @@ class TestInput(BaseModel):
 
 
 class TestTool(BaseTool):
-    name = "run command"
+    name = "runcommand"
     description = "run given command by using subprocess.run()"
     args_schema: Type[BaseModel] = TestInput
 
