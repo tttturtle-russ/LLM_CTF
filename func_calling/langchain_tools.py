@@ -23,7 +23,7 @@ class RunCommandInput(BaseModel):
 
 
 class RunCommand(BaseTool):
-    name = "run_command"
+    name = "run command"
     description = "Execute a command in an Ubuntu container (persistent across calls)"
     args_schema: Type[BaseModel] = RunCommandInput
 
@@ -214,7 +214,7 @@ class DecompileInput(BaseModel):
 
 
 class Decompile(BaseTool):
-    name = "decompile_function"
+    name = "decompile function"
     description = "Decompile a function from a binary using Ghidra"
     args_schema: Type[BaseModel] = DecompileInput
 
