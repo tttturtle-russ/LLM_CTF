@@ -3,7 +3,7 @@ from datetime import datetime
 import re
 from operator import itemgetter
 
-from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.output_parsers import JsonOutputParser, CommaSeparatedListOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from openai import OpenAI
 import argparse
@@ -374,7 +374,11 @@ class CTFConversation:
                 ("user", "{input}")
             ]
         )
-        self.chain = prompt | MistralAgent() | JsonOutputParser() | RunnablePassthrough.assign(output=self.tool_chain)
+        self.chain = (prompt
+                      | MistralAgent()
+                      # | JsonOutputParser()
+                      | CommaSeparatedListOutputParser()
+                      | RunnablePassthrough.assign(output=self.tool_chain))
 
     def tool_chain(self, model_output):
         tool_map = {tool.name: tool for tool in self.tools}
