@@ -15,9 +15,9 @@ from rich import print
 from langchain_tools import *
 import torch
 
-
 openai.base_url = "http://localhost:8000/v1/"
 openai.api_key = "na"
+
 
 class MistralAgent(BaseChatModel):
     name = "Mistral"
@@ -70,7 +70,7 @@ class MistralAgent(BaseChatModel):
 
 
 model = MistralAgent()
-tools = [RunCommand(), CheckFlag(), CreateFile(), Disassemble(), Decompile(),GiveUp(), TestTool()]
+tools = [RunCommand(), CheckFlag(), CreateFile(), Disassemble(), Decompile(), GiveUp(), TestTool()]
 
 rendered_tools = render_text_description_and_args(tools).replace("{", "{{").replace("}", "}}")
 
@@ -96,4 +96,3 @@ print(system_prompt)
 chain = prompt | model | JsonOutputParser() | RunnablePassthrough.assign(output=tool_chain)
 
 print(chain.invoke({"input": "Run command ls -l"}))
-

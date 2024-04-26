@@ -26,6 +26,8 @@ class RunCommand(BaseTool):
     description = "Execute a command in an Ubuntu container (persistent across calls)"
     args_schema: Type[BaseModel] = RunCommandInput
 
+    volume = None
+
     def start_docker(self):
         if self.volume:
             volumes = ['-v', f'{self.volume}:/home/ctfplayer/ctf_files']
@@ -405,14 +407,3 @@ TOOLSETS = {
     "default": DEFAULT_TOOLSET,
 }
 
-rendered_tools = render_text_description_and_args(DEFAULT_TOOLSET)
-
-system_prompt = f"""You are an assistant that has access to the following set of tools. Here are the names and descriptions for each tool:
-
-{rendered_tools}
-
-Given the user input, return the name and input of the tool to use. Return your response as a JSON blob with 'name' and 'arguments' keys."""
-
-prompt = ChatPromptTemplate.from_messages(
-    [("user", system_prompt + "{input}")]
-)
