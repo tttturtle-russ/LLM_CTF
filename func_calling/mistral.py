@@ -83,7 +83,7 @@ class MistralAgent(BaseChatModel):
             run_manager: Optional[CallbackManagerForLLMRun] = None,
             **kwargs: Any,
     ) -> ChatResult:
-        openai.base_url = "http://localhost:8000/v1"
+        openai.base_url = "http://localhost:8000/v1/"
         openai.api_key="na"
         print(messages)
         last_message = messages[-1]
