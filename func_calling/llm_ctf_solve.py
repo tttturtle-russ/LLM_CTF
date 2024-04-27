@@ -158,7 +158,6 @@ class CTFChallenge:
         status.print(f"Execute docker run --network {self.network} --platform linux/amd64 -d --rm --name {self.challenge_container} {self.challenge_container}")
         self.log.log(
             f"Execute docker run --network {self.network} --platform linux/amd64 -d --rm --name {self.challenge_container} {self.challenge_container}")
-        input()
 
     def stop_challenge_container(self):
         if self.is_compose:
@@ -704,7 +703,6 @@ def main():
     parser.add_argument("-L", "--logfile", default=None, help="log file to write to")
     parser.add_argument("-A", "--analysis", help="analysis file to write to")
     args = parser.parse_args()
-    print(args)
     status.set(quiet=args.quiet, debug=args.debug)
     challenge_json = Path(args.challenge_json).resolve()
     with CTFChallenge(challenge_json, args) as chal, \
