@@ -32,10 +32,15 @@ class Logger:
         self.finish_reason = "unknown"
 
     def log(self, message: str):
-        with open(self.log_file, "a") as f:
-            f.write(message)
         if self.logger:
             self.logger.log(level=logging.DEBUG, msg=message)
+        if not os.path.exists(self.log_file):
+            with open(self.log_file, "w") as f:
+                f.write(message)
+            return
+        with open(self.log_file, "a") as f:
+            f.write(message)
+
 
     def user_message(self, message: str):
         self.user.append({"message": message})
