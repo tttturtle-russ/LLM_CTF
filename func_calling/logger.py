@@ -22,6 +22,9 @@ def _extract_code(response: str) -> list[dict]:
 class Logger:
     def __init__(self, log_file, logger):
         self.log_file = log_file
+        if not os.path.exists(self.log_file):
+            file = open(self.log_file, "w")
+            file.close()
         self.logger = logger
         self.assistant = []
         self.user = []
@@ -34,13 +37,8 @@ class Logger:
     def log(self, message: str):
         if self.logger:
             self.logger.log(level=logging.DEBUG, msg=message)
-        if not os.path.exists(self.log_file):
-            with open(self.log_file, "w") as f:
-                f.write(message)
-            return
         with open(self.log_file, "a") as f:
             f.write(message)
-
 
     def user_message(self, message: str):
         self.user.append({"message": message})
