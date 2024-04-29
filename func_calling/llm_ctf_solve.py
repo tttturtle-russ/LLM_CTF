@@ -4,6 +4,7 @@ import re
 from operator import itemgetter
 
 from langchain_core.output_parsers import JsonOutputParser, CommaSeparatedListOutputParser
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from openai import OpenAI
 import argparse
@@ -702,7 +703,7 @@ def main():
     parser.add_argument("-m", "--max-rounds", type=int, default=100, help="maximum number of rounds to run")
     parser.add_argument("-L", "--logfile", default=None, help="log file to write to")
     parser.add_argument("-A", "--analysis", help="analysis file to write to")
-    args = parser.parse_args()
+    args = parser.parse_args()l
     status.set(quiet=args.quiet, debug=args.debug)
     challenge_json = Path(args.challenge_json).resolve()
     with CTFChallenge(challenge_json, args) as chal, \
