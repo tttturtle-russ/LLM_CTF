@@ -1,0 +1,9 @@
+{
+    "name": "Email me!",
+    "description": "Hmmm Pork",
+    "container_image": "spam",
+    "author": "aakhtar3",
+    "category": "forensics",
+    "flag": "csawctf{you_shall_not_pass_my_spam_filter}",
+    "points": 100
+  }

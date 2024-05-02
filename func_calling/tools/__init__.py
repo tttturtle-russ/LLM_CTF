@@ -1,0 +1,18 @@
+from CheckFlag import CHECKFLAGTOOLS
+from FileCommand import FILETOOLS
+from GiveUp import GIVEUPTOOLS, GiveUpException
+from Reverse import REVERSETOOLS
+
+DEFAULT_TOOLSET = REVERSETOOLS + FILETOOLS + CHECKFLAGTOOLS + GIVEUPTOOLS
+
+TOOLSETS = {
+    "crypto": FILETOOLS + CHECKFLAGTOOLS + GIVEUPTOOLS,
+    "misc": FILETOOLS + CHECKFLAGTOOLS + GIVEUPTOOLS,
+    "forensics": FILETOOLS + CHECKFLAGTOOLS + GIVEUPTOOLS,
+    "default": DEFAULT_TOOLSET,
+}
+
+__all__ = [
+    "TOOLSETS",
+    "GiveUpException"
+]

@@ -7,7 +7,7 @@ import json
 import logging
 import os.path
 from pathlib import Path
-from typing import Union, Optional
+from typing import Union, Optional, List, Dict
 import re
 
 
@@ -25,39 +25,48 @@ class Logger:
         self.logdir = self.log_file.parent
         self.logdir.mkdir(parents=True, exist_ok=True)
         self.logger = logger
-        self.assistant = []
-        self.user = []
-        self.analysis = []
-        self.tools = []
-        self.code = []
-        self.exception = []
+        self.json = {}
+        self.content = []
         self.finish_reason = "unknown"
 
     def log(self, message: str):
         if self.logger:
             self.logger.log(level=logging.DEBUG, msg=message)
-        self.log_file.open("a").writelines(message)
 
-    def user_message(self, message: str):
-        self.user.append({"message": message})
+    def write_to_file(self):
+        obj = {"results": self.content, "finish_reason": self.finish_reason}
+        with open(self.log_file, "w") as f:
+            json.dump(obj, f, indent=4)
 
-    def assistant_message(self, rounds: int, message: str):
-        self.assistant.append({"rounds": rounds, "message": message})
-        if _extract_code(message):
-            self._code_generated(rounds, message)
+    @staticmethod
+    def _extract_code(response: str) -> List[dict]:
+        pattern = r"```(python|bash)\n(.*?)\n```"
+        code = None
+        for match in re.finditer(pattern, response, re.DOTALL):
+            if code is None:
+                code = []
+            code.append({"language": match.group(1), "code": match.group(2)})
+        return code
+
+    def tool_call(self, tool_calls: Dict):
+        self.json["tools"] = tool_calls
+
+    def user_message(self, rounds: int, message: str):
+        self.json["rounds"] = rounds
+        self.json["user"] = message
+
+    def assistant_message(self, message: str):
+        self.json["assistant"] = message
+        if (code := _extract_code(message)) is not None:
+            self.json["code"] = code
         else:
-            self.analysis.append({"rounds": rounds, "message": message})
-
-    def tool_used(self, rounds: int,
-                  tool_result: Optional[list[dict]] = None):
-        self.tools.append({"rounds": rounds, "tool_result": tool_result})
-
-    def _code_generated(self, rounds: int, response: str):
-        self.code.append({"rounds": rounds, "code": _extract_code(response)})
+            self.json["thought"] = message
+        self.content.append(self.json.copy())
+        self.json.clear()
 
     def finish(self, reason: str):
         self.finish_reason = reason
-
+        self.write_to_file()
 
 # class ToolWrapper:
 #     def __init__(self, logger: Logger, tool: Tool):

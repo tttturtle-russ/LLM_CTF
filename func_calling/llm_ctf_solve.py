@@ -1,21 +1,27 @@
+import argparse
+import json
 import logging
-from datetime import datetime
 import re
+import shutil
+import subprocess
+import tempfile
+import traceback as tb
+from datetime import datetime
 from operator import itemgetter
+from pathlib import Path
+from typing import List
 
-from langchain_core.output_parsers import JsonOutputParser, CommaSeparatedListOutputParser
+from langchain_core.exceptions import OutputParserException
+from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
+from langchain_core.tools import BaseTool
 from openai import OpenAI
-import argparse
-import shutil
-from ctflogging import status
-import traceback as tb
-from typing import List
-from logger import Logger
 
+from ctflogging import status
+from logger import Logger
 from mistral import MistralAgent
-from langchain_tools import *
+from tools import TOOLSETS, GiveUpException
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
 
@@ -242,7 +248,7 @@ They are showed as follows: \n
 {toolset}
 
 
-Given the user input, return the name and input of the tool to use. Return your response as a JSON blob with 'name' and 'arguments' keys.
+Given the user input, return the name and input of the tool to use or generate a python or bash code that can be execute to solve the problem. Return your response as a JSON blob with 'name' and 'arguments' keys.
 The tool-use [Scratchpad] documents the history of tool usage, which is formatted as follows and should be used to structure your response:
 You should only returns a json blob without any other information or nonsense, like this:
 {{
@@ -251,6 +257,12 @@ You should only returns a json blob without any other information or nonsense, l
         "arg1": "value1",
         "arg2": "value2"
     }}
+}}
+
+The code [Scratchpad] documents the history of code usage, which is formatted as follows and should be used to structure your response:
+{{
+    "language": "python",
+    "code": "your python code here"
 }}
 
 After giving your response, you should end your response for this turn and wait for the user's next input, which will be the result of the tool's output.
@@ -444,45 +456,47 @@ class CTFConversation:
     #     return tool_results
 
     def _parse_tool_calls_by_name(self, tool_name, response):
+        output = response['output']
+        self.log.tool_call(response)
         if tool_name == 'give_up':
-            if response['output']['give up'] is True:
+            if output['give up'] is True:
                 raise GiveUpException()
             else:
-                return {"error": response['output']['error']['message']}
+                return {"error": output['error']['message']}
         elif tool_name == 'run_command':
-            stdout = response['output']['stdout']
-            stderr = response['output']['stderr']
-            returncode = response['output']['returncode']
+            stdout = output['stdout']
+            stderr = output['stderr']
+            returncode = output['returncode']
             if returncode != 0:
                 return {"error": f"Command failed with return code {returncode}: {stderr}"}
             return {"stdout": stdout, "stderr": stderr}
         elif tool_name == 'check_flag':
-            if 'correct' in response['output']:
-                if response['output']['correct'] is True:
+            if 'correct' in output:
+                if output['correct'] is True:
                     self.chal.solved = True
                     return {"correct": True}
                 else:
                     return {"correct": False}
             else:
-                error = response['output']['error']
+                error = output['error']
                 return {"error": f"{error['tool']} failed with error: {error['message']}"}
         elif tool_name == 'create_file':
-            if 'success' in response['output'] and response['output']['success'] is True:
-                return {"success": True, "path": response['output']['path']}
+            if 'success' in output and response['output']['success'] is True:
+                return {"success": True, "path": output['path']}
             else:
-                error = response['output']['error']
+                error = output['error']
                 return {"error": f"{error['tool']} failed with error: {error['message']}"}
         elif tool_name == 'decompile_function':
-            if 'decompilation' in response['output']:
-                return {"decompilation": response['output']['decompilation']}
+            if 'decompilation' in output:
+                return {"decompilation": output['decompilation']}
             else:
-                error = response['output']['error']
+                error = output['error']
                 return {"error": f"{error['tool']} failed with error: {error['message']}"}
         elif tool_name == 'disassemble_function':
-            if 'disassembly' in response['output']:
-                return {"disassembly": response['output']['disassembly']}
+            if 'disassembly' in output:
+                return {"disassembly": output['disassembly']}
             else:
-                error = response['output']['error']
+                error = output['error']
                 return {"error": f"{error['tool']} failed with error: {error['message']}"}
         else:
             return {"error": f"Unknown tool {tool_name}"}
@@ -499,10 +513,16 @@ class CTFConversation:
             })
         except KeyError as e:
             self.log.log(f"Exception: {e}")
-            return f"Unknown tool {response['name']}"
+            return f"Observation: Unknown tool {response['name']}"
+        except OutputParserException as e:
+            self.log.log(f"Exception: {e}")
+            return "Observation: Your response is not a valid JSON blob. Please check the format and try again."
+        except Exception:
+            self.log.log(f"Exception: {tb.format_exc()}")
+            return f"Observation: Error running tool: {tb.format_exc()}"
         tool_result = self.parse_tool_calls(response)
         if 'error' in tool_result:
-            return tool_result['error']
+            return f"Observation: {tool_result['error']}"
         obs = f"Observation: {json.dumps(tool_result)}"
         self.messages.append({"role": "user", "content": obs})
         self.log.log(f"Observation: {json.dumps(tool_result)}")
@@ -697,13 +717,13 @@ def main():
     parser.add_argument("-q", "--quiet", action="store_true", help="don't print messages to the console")
     parser.add_argument("-d", "--debug", action="store_true", help="print debug messages")
     parser.add_argument("-M", "--model", default=MODELS[0], help="the model to use")
-    parser.add_argument("-C", "--container-image", default="ctfenv",
+    parser.add_argument("-C", "--container_image", default="ctfenv",
                         help="the Docker image to use for the CTF environment")
     parser.add_argument("-N", "--network", default="ctfnet", help="the Docker network to use for the CTF environment")
     parser.add_argument("-m", "--max-rounds", type=int, default=100, help="maximum number of rounds to run")
     parser.add_argument("-L", "--logfile", default=None, help="log file to write to")
     parser.add_argument("-A", "--analysis", help="analysis file to write to")
-    args = parser.parse_args()l
+    args = parser.parse_args()
     status.set(quiet=args.quiet, debug=args.debug)
     challenge_json = Path(args.challenge_json).resolve()
     with CTFChallenge(challenge_json, args) as chal, \

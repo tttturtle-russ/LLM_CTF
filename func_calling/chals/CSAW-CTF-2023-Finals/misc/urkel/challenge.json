@@ -1,0 +1,9 @@
+{
+  "name": "Urkel",
+  "description": "Did I do that?",
+  "container_image": "urkel",
+  "author": "aakhtar3",
+  "category": "misc",
+  "flag": "csawctf{G0+___4NY___CH3333333333333333S3}",
+  "points": 500
+}
