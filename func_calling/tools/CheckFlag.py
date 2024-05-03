@@ -4,6 +4,9 @@ from typing import Dict, Optional, Type
 
 from langchain_core.callbacks import CallbackManagerForToolRun
 
+from func_calling.Env import CTFEnv
+
+
 class CheckFlagInput(BaseModel):
     flag: str = Field(description="the flag to check")
 
@@ -14,6 +17,7 @@ class CheckFlag(BaseTool):
     args_schema: Type[BaseModel] = CheckFlagInput
 
     real_flag: str = None
+    env:CTFEnv
 
     @staticmethod
     def handler(output) -> Dict:
@@ -31,6 +35,7 @@ class CheckFlag(BaseTool):
             flag: str = None,
             run_manager: Optional[CallbackManagerForToolRun] = None
     ) -> Dict:
+        self.env.log.tool_call()
         if flag is None:
             return {
                 "error": {

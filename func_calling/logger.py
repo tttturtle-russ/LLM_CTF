@@ -57,16 +57,16 @@ class Logger:
 
     def assistant_message(self, message: str):
         self.json["assistant"] = message
-        if (code := _extract_code(message)) is not None:
-            self.json["code"] = code
-        else:
-            self.json["thought"] = message
         self.content.append(self.json.copy())
         self.json.clear()
 
     def finish(self, reason: str):
         self.finish_reason = reason
         self.write_to_file()
+
+    def code(self, language, code):
+        self.json['code'] = {"language": language, "code": code}
+
 
 # class ToolWrapper:
 #     def __init__(self, logger: Logger, tool: Tool):

@@ -450,16 +450,42 @@ class CTFEnv:
             capture_output=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
 
-    def _parse_tool_calls(self, response):
+    def run_code(self,language, code):
+        if language == 'python':
+            self.exec(f"echo '{code}' > /home/ctfbench/code.py")
+            p = self.exec("python3 /home/ctfbench/code.py")
+            if p.returncode != 0:
+                return {"error": p.stderr.decode()}
+            return {
+                "stdout": p.stdout.decode(),
+                "stderr": p.stderr.decode(),
+            }
+        elif language == 'bash':
+            self.exec(f"echo '{code}' > /home/ctfbench/code.sh")
+            p = self.exec("bash /home/ctfbench/code.sh")
+            if p.returncode != 0:
+                return {"error": p.stderr.decode()}
+            return {
+                "stdout": p.stdout.decode(),
+                "stderr": p.stderr.decode(),
+            }
+        else:
+            return {"error": "Unknown language"}
+
+    def _parse_response(self, response):
+        if 'language' in response:
+            self.log.code(response['language'], response['code'])
+            return self.run_code(response['language'], response['code'])
         output = response['output']
         tool_name = response['name']
         self.log.tool_call(response)
         return toolhandlers[tool_name](output)
 
     def step(self):
+        self.log.user_message(self.rounds, self.obs)
         try:
             response = self.llm.invoke({"input": self.obs})
-            toolcalls = self._parse_tool_calls(response)
+            toolcalls = self._parse_response(response)
             if 'error' in toolcalls:
                 self.obs = f"Observation: {toolcalls['error']}"
                 return
@@ -481,6 +507,7 @@ class CTFEnv:
             obs = f"Observation: Error running tool: {tb.format_exc()}"
             self.obs = obs
         finally:
+            self.log.assistant_message(self.obs)
             self.rounds += 1
             if self.chal.solved or (self.chal.real_flag in self.obs):
                 self.finish_reason = "solved"
