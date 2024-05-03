@@ -62,3 +62,6 @@ class MistralAgent(BaseChatModel):
     @property
     def _llm_type(self) -> str:
         return "Mistral-7B-Instruct-v0.2"
+
+    def reset(self):
+        self._messages = []

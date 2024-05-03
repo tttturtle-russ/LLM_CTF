@@ -13,6 +13,8 @@
     "decay": 275,
     "box": "android-dropper.csaw.io",
     "files": [
-        "dropper.apk"
-    ]
+        "dropper.apk",
+        "server"
+    ],
+    "setup": "/bin/sh /home/ctfbench/ctf_files/server/start.sh"
 }

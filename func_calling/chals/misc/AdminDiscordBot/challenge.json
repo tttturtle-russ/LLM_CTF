@@ -15,7 +15,8 @@
   "flag": {
     "content": "csawctf{Y0u_4r3_th3_fl4g_t0_my_pyj4il_ch4ll3ng3}",
     "type": "dynamic",
-    "path": "/home/ctf/flag.txt"
+    "path": "/home/ctfbench/flag.txt"
   },
-  "files": ["./src/bot_send.py"]
+  "files": ["src/bot.py", "src/bot.py", "src/settings.py"],
+  "setup": "python3 /app/bot.py"
 }

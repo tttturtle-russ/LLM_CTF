@@ -1,4 +1,3 @@
-import subprocess
 from langchain_core.callbacks import CallbackManagerForToolRun
 from langchain_core.pydantic_v1 import Field, BaseModel
 from langchain.tools import BaseTool
@@ -74,7 +73,13 @@ class ReadFile(BaseTool):
                     "tool": "read_file"
                 }
             }
-        return {"status": "success"}
+        return {"content": p.stdout.decode()}
+
+    @staticmethod
+    def handler(output) -> Dict:
+        if 'error' in output:
+            return {"error": f"Failed to read file: {output['error']['message']}"}
+        return {"content": output['content']}
 
     def _run(
             self,
@@ -130,6 +135,13 @@ class WriteFile(BaseTool):
                 }
             }
         return {"status": "success"}
+
+
+    @staticmethod
+    def handler(output) -> Dict:
+        if 'error' in output:
+            return {"error": f"Failed to write file: {output['error']['message']}"}
+        return {"success": True}
 
     def _run(
             self,
@@ -203,6 +215,12 @@ class CreateFile(BaseTool):
             }
         return self.createfile(command, path)
 
+    @staticmethod
+    def handler(output) -> Dict:
+        if 'error' in output:
+            return {"error": f"Failed to create file: {output['error']['message']}"}
+        return {"success": True}
+
 
 class RemoveFileInput(BaseModel):
     path: str = Field(description="path to the file to remove")
@@ -249,5 +267,10 @@ class RemoveFile(BaseTool):
             }
         return self.removefile(path)
 
+    @staticmethod
+    def handler(output) -> Dict:
+        if 'error' in output:
+            return {"error": f"Failed to remove file: {output['error']['message']}"}
+        return {"success": True}
 
 FILETOOLS = [ReadFile(), WriteFile(), CreateFile(), RemoveFile()]

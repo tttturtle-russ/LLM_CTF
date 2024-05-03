@@ -10,5 +10,6 @@
   "minimum": 50,
   "decay": 275,
   "box": "crypto.chal.csaw.io",
-  "files":["dist.zip"]
+  "files":["dist.zip"],
+  "setup": "socat -T600 TCP-LISTEN:5002,reuseaddr,fork EXEC:/usr/bin/sage /home/ctfbench/ctf_files/chall.sage"
 }

@@ -1,5 +1,4 @@
 from typing import Dict, Optional, Type
-from argparse import Namespace
 import json
 import subprocess
 import tempfile
@@ -7,6 +6,8 @@ from pathlib import Path
 from langchain.tools import BaseTool
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain_core.callbacks import CallbackManagerForToolRun
+
+from func_calling.Env import CTFEnv
 
 SCRIPT_DIR = Path(__file__).parent.parent.resolve()
 GHIDRA = SCRIPT_DIR / 'ghidra_11.0_PUBLIC/support/analyzeHeadless'
@@ -23,7 +24,15 @@ class Decompile(BaseTool):
     args_schema: Type[BaseModel] = DecompileInput
 
     _decomp_cache: Dict = {}
-    namespace: Namespace = None
+    env: CTFEnv
+
+    @staticmethod
+    def handler(output) -> Dict:
+        if 'decompilation' in output:
+            return {"decompilation": output['decompilation']}
+        else:
+            error = output['error']
+            return {"error": f"{error['tool']} failed with error: {error['message']}"}
 
     def _run(
             self,
@@ -47,7 +56,7 @@ class Decompile(BaseTool):
         basename = Path(binary).name
         if basename not in self._decomp_cache:
             self._decomp_cache[basename] = {}
-            decomp_output = SCRIPT_DIR / f"decomp/{self.namespace.challenge.category}/{self.namespace.challenge.chaldir.name}/{basename}.decomp.json"
+            decomp_output = SCRIPT_DIR / f"decomp/{self.env.chal.category}/{self.env.chal.chaldir.name}/{basename}.decomp.json"
             if decomp_output.exists():
                 self._decomp_cache[basename] = json.loads(decomp_output.read_text())
             else:
@@ -73,7 +82,7 @@ class Decompile(BaseTool):
         return {"decompilation": self._decomp_cache[basename][function]}
 
     def run_ghidra(self, binary, output):
-        binary_paths = self.namespace.challenge.chaldir.glob(f'**/{binary}')
+        binary_paths = self.env.chal.chaldir.glob(f'**/{binary}')
         real_binary = next(binary_paths, None)
         if not real_binary or not real_binary.exists():
             return False
@@ -99,7 +108,15 @@ class Disassemble(BaseTool):
     args_schema: Type[BaseModel] = DisassembleInput
 
     _disasm_cache: Dict = {}
-    namespace: Namespace = None
+    env: CTFEnv
+
+    @staticmethod
+    def handler(output) -> Dict:
+        if 'disassembly' in output:
+            return {"disassembly": output['disassembly']}
+        else:
+            error = output['error']
+            return {"error": f"{error['tool']} failed with error: {error['message']}"}
 
     def _run(
             self,
@@ -121,7 +138,7 @@ class Disassemble(BaseTool):
     def disassemble(self, binary, function):
         # Look for the disassembly output in "decomp"
         basename = Path(binary).name
-        disasm_output = SCRIPT_DIR / f"decomp/{self.namespace.challenge.category}/{self.namespace.challenge.chaldir.name}/{basename}.disas.json"
+        disasm_output = SCRIPT_DIR / f"decomp/{self.env.chal.category}/{self.env.chal.chaldir.name}/{basename}.disas.json"
 
         if basename not in self._disasm_cache:
             if disasm_output.exists():
@@ -150,7 +167,7 @@ class Disassemble(BaseTool):
         return {"disassembly": self._disasm_cache[basename][function]}
 
     def run_ghidra(self, binary, output):
-        binary_paths = self.namespace.challenge.chaldir.glob(f'**/{binary}')
+        binary_paths = self.env.chal.chaldir.glob(f'**/{binary}')
         real_binary = next(binary_paths, None)
         if not real_binary or not real_binary.exists():
             return False

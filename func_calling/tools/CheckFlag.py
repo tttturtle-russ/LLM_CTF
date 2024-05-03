@@ -1,10 +1,8 @@
 from langchain.tools import BaseTool
 from langchain.pydantic_v1 import BaseModel, Field
 from typing import Dict, Optional, Type
-from argparse import Namespace
 
 from langchain_core.callbacks import CallbackManagerForToolRun
-
 
 class CheckFlagInput(BaseModel):
     flag: str = Field(description="the flag to check")
@@ -15,8 +13,18 @@ class CheckFlag(BaseTool):
     description = "Check if a flag is correct"
     args_schema: Type[BaseModel] = CheckFlagInput
 
-    namespace: Namespace = None
     real_flag: str = None
+
+    @staticmethod
+    def handler(output) -> Dict:
+        if 'correct' in output:
+            if output['correct'] is True:
+                return {"correct": True}
+            else:
+                return {"correct": False}
+        else:
+            error = output['error']
+            return {"error": f"{error['tool']} failed with error: {error['message']}"}
 
     def _run(
             self,

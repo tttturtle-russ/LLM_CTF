@@ -14,7 +14,8 @@
     "flag": {
       "content": "csawctf{d0n't_g@mbl3__juST_pwn_!!}",
       "type": "dynamic",
-      "path": "/home/ctf/flag"
+      "path": "/home/ctfbench/flag"
     },
-    "files":["share.zip"]
+    "files":["chal/flag", "chal/double_zer0_dilemma"],
+    "setup": "socat -T60 TCP-LISTEN:9999,reuseaddr,fork EXEC:/home/ctfbench/ctf_files/double_zer0_dilemma"
 }

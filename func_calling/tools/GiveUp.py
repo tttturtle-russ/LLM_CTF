@@ -1,5 +1,4 @@
 from typing import Dict, Optional, Type
-from argparse import Namespace
 from langchain.tools import BaseTool
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain_core.callbacks import CallbackManagerForToolRun
@@ -18,7 +17,12 @@ class GiveUp(BaseTool):
     description = "Give up on the challenge"
     args_schema: Type[BaseModel] = GiveUpInput
 
-    namespace: Namespace = None
+    @staticmethod
+    def handler(output) -> Dict:
+        if output['give up'] is True:
+            raise GiveUpException()
+        else:
+            return {"error": output['error']['message']}
 
     def _run(
             self,

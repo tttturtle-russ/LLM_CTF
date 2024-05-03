@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import Type, Optional, Dict, List, Union
 
 from langchain.pydantic_v1 import BaseModel, Field
@@ -8,17 +7,8 @@ from langchain_core.callbacks import CallbackManagerForToolRun
 from ..Env import CTFEnv
 
 
-class ListenCommand(str, Enum):
-    NC = "nc"
-    TCPDUMP = "tcpdump"
-    TSHARK = "tshark"
-
-
 class ListenCommandToolInput(BaseModel):
-    command: ListenCommand = Field(description="The command to use to listen for incoming connections")
-    port: int = Field(description="The port to listen on")
-    options: Optional[Union[List[str], str]] = Field(description="Options to pass to the command", default=None)
-    host: Optional[str] = Field(description="The host to listen on", default="127.0.0.1")
+    command: str = Field(description="The command to use to listen for incoming connections")
 
 
 class ListenCommandTool(BaseTool):
@@ -27,22 +17,45 @@ class ListenCommandTool(BaseTool):
     args_schema: Type[BaseModel] = ListenCommandToolInput
     env: CTFEnv
 
+    @staticmethod
+    def handler(output) -> Dict:
+        if 'error' in output:
+            error = output['error']
+            return {"error": f"Failed to listen with error: {error['message']}"}
+        else:
+            return {
+                "stdout": output["stdout"],
+                "stderr": output["stderr"],
+                "returncode": output["returncode"],
+                "outfile": "net.out"
+            }
+
     def _run(
             self,
-            command: ListenCommand,
-            port: int,
-            options: Optional[Union[List[str], str]] = None,
-            host: Optional[str] = None,
+            command: str,
             run_manager: Optional[CallbackManagerForToolRun] = None,
     ) -> Dict:
-        if command == ListenCommand.NC:
-            return self._run_nc(port, options, host)
-        elif command == ListenCommand.TCPDUMP:
-            return self._run_tcpdump(host, port, run_manager)
-        elif command == ListenCommand.TSHARK:
-            return self._run_tshark(host, port, run_manager)
-        else:
-            raise ValueError(f"Unknown command {command}")
+        p = self.env.exec(command)
+        if p is None:
+            return {
+                "error": {
+                    "message": "Internal error",
+                    "tool": "net_listen"
+                }
+            }
+        if p.returncode != 0:
+            return {
+                "error": {
+                    "message": p.stderr.decode(),
+                    "tool": "net_listen"
+                }
+            }
+        return {
+            "stdout": p.stdout.decode(),
+            "stderr": p.stderr.decode(),
+            "returncode": p.returncode,
+            "outfile": "net.out"
+        }
 
     def _run_nc(
             self,
@@ -62,7 +75,6 @@ class ListenCommandTool(BaseTool):
             command_with_options += f" {options}"
         if host is not None:
             command_with_options += f" {host}"
-        command_with_options += "> "
         p = self.env.exec(command_with_options)
         if p is None:
             return {
@@ -78,3 +90,108 @@ class ListenCommandTool(BaseTool):
                     "tool": "net_listen"
                 }
             }
+        return {
+            "stdout": p.stdout.decode(),
+            "stderr": p.stderr.decode(),
+            "returncode": p.returncode,
+            "outfile": "nc.out"
+        }
+
+
+class RequestCommandToolInput(BaseModel):
+    command: str = Field(description="The command to use to make a request")
+
+
+class RequestCommandTool(BaseTool):
+    name = "net_request"
+    description = "Make a request to a server"
+    args_schema: Type[BaseModel] = RequestCommandToolInput
+    env: CTFEnv
+
+    def _run(
+            self,
+            command: str,
+            run_manager: Optional[CallbackManagerForToolRun] = None,
+    ) -> Dict:
+        p = self.env.exec(command)
+        if p is None:
+            return {
+                "error": {
+                    "message": "Internal error",
+                    "tool": "net_request"
+                }
+            }
+        if p.returncode != 0:
+            return {
+                "error": {
+                    "message": p.stderr.decode(),
+                    "tool": "net_request"
+                }
+            }
+        return {
+            "stdout": p.stdout.decode(),
+            "stderr": p.stderr.decode(),
+            "returncode": p.returncode,
+        }
+
+    @staticmethod
+    def handler(output) -> Dict:
+        if 'error' in output:
+            error = output['error']
+            return {"error": f"Failed to make request with error: {error['message']}"}
+        else:
+            return {
+                "stdout": output["stdout"],
+                "stderr": output["stderr"],
+                "returncode": output["returncode"],
+            }
+
+class ScanCommandToolInput(BaseModel):
+    command: str = Field(description="The command to use to scan for open ports")
+
+
+class ScanCommandTool(BaseTool):
+    name = "net_scan"
+    description = "Scan for open ports on a host"
+    args_schema: Type[BaseModel] = ScanCommandToolInput
+    env: CTFEnv
+
+    def _run(
+            self,
+            command: str,
+            run_manager: Optional[CallbackManagerForToolRun] = None,
+    ) -> Dict:
+        p = self.env.exec(command)
+        if p is None:
+            return {
+                "error": {
+                    "message": "Internal error",
+                    "tool": "net_scan"
+                }
+            }
+        if p.returncode != 0:
+            return {
+                "error": {
+                    "message": p.stderr.decode(),
+                    "tool": "net_scan"
+                }
+            }
+        return {
+            "stdout": p.stdout.decode(),
+            "stderr": p.stderr.decode(),
+            "returncode": p.returncode,
+        }
+
+    @staticmethod
+    def handler(output) -> Dict:
+        if 'error' in output:
+            error = output['error']
+            return {"error": f"Failed to scan with error: {error['message']}"}
+        else:
+            return {
+                "stdout": output["stdout"],
+                "stderr": output["stderr"],
+                "returncode": output["returncode"],
+            }
+
+NETTOOLS = [ListenCommandTool(), RequestCommandTool(), ScanCommandTool()]

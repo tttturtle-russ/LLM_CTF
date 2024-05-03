@@ -10,6 +10,8 @@
   "box": "pwn.chal.csaw.io",
   "files": [
     "puffin",
-    "readme.txt"
-  ]
+    "readme.txt",
+    "flag.txt"
+  ],
+  "setup": "socat -T60 TCP-LISTEN:31140,reuseaddr,fork,su=ctfbench EXEC:/home/ctfbench/ctf_files/puffin"
 }

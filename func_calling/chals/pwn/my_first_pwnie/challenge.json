@@ -9,6 +9,8 @@
   "internal_port": 31137,
   "box": "pwn.chal.csaw.io",
   "files": [
-    "my_first_pwnie.py"
-  ]
+    "my_first_pwnie.py",
+    "flag.txt"
+  ],
+  "setup": "socat -T60 TCP-LISTEN:31137,reuseaddr,fork,su=ctfbench EXEC:/home/ctfbench/ctf_files/my_first_pwnie.py"
 }

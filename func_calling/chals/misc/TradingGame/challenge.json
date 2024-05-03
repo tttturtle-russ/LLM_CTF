@@ -17,5 +17,6 @@
       "type": "dynamic",
       "path": "/home/ctf/flag.txt"
     },
-    "files":["src/app.py","src/process.py","src/user.py"]
+    "files":["src/app.py","src/process.py","src/user.py"],
+    "setup": "/home/ctfbench/ctf_files/start.sh"
 }

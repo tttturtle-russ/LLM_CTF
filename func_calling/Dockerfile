@@ -25,10 +25,12 @@ RUN apt-get update && apt-get install -y \
     ubuntu-desktop \
     bc \
     bsdmainutils \
+    lib32z1 \
+    xinetd \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user with sudo permissions
-ARG USERNAME=ctfplayer
+ARG USERNAME=ctfbench
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 RUN groupadd --gid $USER_GID $USERNAME \
@@ -47,7 +49,7 @@ RUN wget https://github.com/radareorg/radare2/releases/download/5.8.8/radare2-de
         rm -rf ./radare2-dev_5.8.8_amd64.deb ./radare2_5.8.8_amd64.deb
 
 # Sagemath
-RUN apt-get install -y sagemath
+RUN apt-get install -y sagemath socat
 
 # sqlmap and nikto
 RUN apt-get install -y sqlmap nikto
@@ -60,7 +62,7 @@ RUN rm -f jadx-1.4.7.zip
 
 # Switch to user
 USER $USERNAME
-WORKDIR /home/$USERNAME
+WORKDIR /home/$USERNAME/ctf_files
 
 # Install pwntools
 ENV VIRTUAL_ENV=/home/$USERNAME/.ctfenv
@@ -68,6 +70,8 @@ RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 RUN pip install -U pip
 RUN pip install pwntools ipython gmpy2
+
+RUN sage -pip install pycrypto
 
 # Copy in the entrypoint script
 COPY entrypoint.sh /home/$USERNAME/.entrypoint.sh
