@@ -69,11 +69,16 @@ class RunCommand(BaseTool):
         except subprocess.TimeoutExpired as e:
             out = self._clean(e.stdout)
             err = self._clean(e.stderr)
-            return {"stdout": out, "stderr": err, "returncode": None, "timeout": True, "error": {
-                "message": f"Command timed out after {timeout} seconds",
-                "tool": "run_command"
+            return {
+                "stdout": out,
+                "stderr": err,
+                "returncode": None,
+                "timeout": True,
+                "error": {
+                    "message": f"Command timed out after {timeout} seconds",
+                    "tool": "run_command"
+                }
             }
-                    }
         except subprocess.CalledProcessError as e:
             out = self._clean(e.stdout)
             err = self._clean(e.stderr)
