@@ -1199,6 +1199,10 @@ class CTFEnv:
                     | JsonOutputParser()
                     | RunnablePassthrough.assign(output=self.tool_chain))
 
+    def __enter__(self):
+        self.start_challenge()
+        return self
+
     def tool_chain(self, model_output):
         tool_map = {tool.name: tool for tool in self.tools}
         chosen_tool = tool_map[model_output["name"]]
