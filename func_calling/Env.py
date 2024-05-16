@@ -15,8 +15,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.tools import BaseTool
 
-from func_calling.mistral import MistralAgent
-from func_calling.tools import GiveUpException
+from mistral import MistralAgent
+from GiveUp import GiveUpException
 from tools import DEFAULT_TOOLSET
 from logger import Logger
 from ctflogging import status
@@ -171,11 +171,13 @@ You should make tool calls to help with the challenge description to the greates
 Now begin your task! Remember that the tools available to you are: {toolset}, which may be different from the tools in the example above. Please output your **NEXT** response or [Final Answer] (when you have finished all your actions) following the provided [Scratchpad].
 The challenge description: 
 """
-from tools.CheckFlag import CheckFlag
-from tools.NetTools import ScanCommandTool, RequestCommandTool, ListenCommandTool
-from tools.FileCommand import ReadFile, WriteFile, CreateFile, RemoveFile
-from tools.Reverse import Decompile, Disassemble
-from tools.GiveUp import GiveUp
+# from CheckFlag import CheckFlag
+# from NetTools import ScanCommandTool, RequestCommandTool, ListenCommandTool
+# from FileCommand import ReadFile, WriteFile, CreateFile, RemoveFile
+# from Reverse import Decompile, Disassemble
+# from GiveUp import GiveUp
+from tools import CheckFlag, ScanCommandTool, RequestCommandTool, ListenCommandTool, ReadFile, WriteFile, CreateFile, \
+    RemoveFile, Decompile, Disassemble, GiveUp, KillProcess, InstallPkg
 
 toolhandlers = {
     "net_listen": ListenCommandTool.handler,
@@ -189,6 +191,8 @@ toolhandlers = {
     "decompile_function": Decompile.handler,
     "disassemble_function": Disassemble.handler,
     "give_up": GiveUp.handler,
+    "kill_process": KillProcess.handler,
+    "install_pkg": InstallPkg.handler,
     "default": lambda x: {"error": f"Unknown tool {x}"}
 }
 

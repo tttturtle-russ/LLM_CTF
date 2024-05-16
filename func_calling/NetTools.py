@@ -4,7 +4,7 @@ from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import BaseTool
 from langchain_core.callbacks import CallbackManagerForToolRun
 
-from ..Env import CTFEnv
+from Env import CTFEnv
 
 
 class ListenCommandToolInput(BaseModel):

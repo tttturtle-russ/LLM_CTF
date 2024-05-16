@@ -7,7 +7,7 @@ from langchain.tools import BaseTool
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain_core.callbacks import CallbackManagerForToolRun
 
-from func_calling.Env import CTFEnv
+from Env import CTFEnv
 
 SCRIPT_DIR = Path(__file__).parent.parent.resolve()
 GHIDRA = SCRIPT_DIR / 'ghidra_11.0_PUBLIC/support/analyzeHeadless'

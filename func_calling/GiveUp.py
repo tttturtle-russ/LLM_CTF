@@ -3,6 +3,7 @@ from langchain.tools import BaseTool
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain_core.callbacks import CallbackManagerForToolRun
 
+from Env import CTFEnv
 
 class GiveUpException(Exception):
     pass

@@ -4,7 +4,7 @@ from langchain.tools import BaseTool
 from typing import Dict, Optional, Type, Union, List
 from enum import Enum
 
-from ..Env import CTFEnv
+from Env import CTFEnv
 
 
 class ReadFileCommand(str, Enum):

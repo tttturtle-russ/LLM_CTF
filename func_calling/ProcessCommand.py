@@ -4,17 +4,17 @@ from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import BaseTool
 from langchain_core.callbacks import CallbackManagerForToolRun
 
-from ..Env import CTFEnv
+from Env import CTFEnv
 
 
-class InstallPkgInput(BaseModel):
-    command: str = Field(description="The command to use to install a package")
+class KillProcessInput(BaseModel):
+    command: str = Field(description="The command to use to kill a process")
 
 
-class InstallPkg(BaseTool):
-    name = "install_pkg"
-    description = "Install a package using pip or apt-get"
-    args_schema: Type[BaseModel] = InstallPkgInput
+class KillProcess(BaseTool):
+    name = "kill_process"
+    description = "Kill a process using the kill command"
+    args_schema: Type[BaseModel] = KillProcessInput
     env: CTFEnv
 
     @staticmethod
@@ -33,7 +33,7 @@ class InstallPkg(BaseTool):
             return {
                 "error": {
                     "message": "Internal error",
-                    "tool": "install_pkg"
+                    "tool": "kill_process"
                 }
             }
 
@@ -41,7 +41,7 @@ class InstallPkg(BaseTool):
             return {
                 "error": {
                     "message": p.stderr.decode(),
-                    "tool": "install_pkg"
+                    "tool": "kill_process"
                 }
             }
 
@@ -50,4 +50,4 @@ class InstallPkg(BaseTool):
         }
 
 
-PKGTOOLS = [InstallPkg()]
+PROCESSTOOLS = [KillProcess()]
