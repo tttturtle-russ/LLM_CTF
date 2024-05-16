@@ -1014,6 +1014,7 @@ toolhandlers = {
     tool.name: tool.handler for tool in DEFAULT_TOOLSET
 }
 
+
 class CTFChallenge:
     def __init__(self, challenge_json):
         self.challenge_json = challenge_json.resolve()
@@ -1202,6 +1203,9 @@ class CTFEnv:
     def __enter__(self):
         self.start_challenge()
         return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.stop_challenge()
 
     def tool_chain(self, model_output):
         tool_map = {tool.name: tool for tool in self.tools}
