@@ -176,6 +176,7 @@ from tools.NetTools import ScanCommandTool, RequestCommandTool, ListenCommandToo
 from tools.FileCommand import ReadFile, WriteFile, CreateFile, RemoveFile
 from tools.Reverse import Decompile, Disassemble
 from tools.GiveUp import GiveUp
+
 toolhandlers = {
     "net_listen": ListenCommandTool.handler,
     "net_request": RequestCommandTool.handler,
@@ -190,6 +191,7 @@ toolhandlers = {
     "give_up": GiveUp.handler,
     "default": lambda x: {"error": f"Unknown tool {x}"}
 }
+
 
 class CTFChallenge:
     def __init__(self, challenge_json):
@@ -450,7 +452,7 @@ class CTFEnv:
             capture_output=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
 
-    def run_code(self,language, code):
+    def run_code(self, language, code):
         if language == 'python':
             self.exec(f"echo '{code}' > /home/ctfbench/code.py")
             p = self.exec("python3 /home/ctfbench/code.py")
@@ -514,10 +516,6 @@ class CTFEnv:
                 self.log.finish(self.finish_reason)
                 self.obs = "Final Answer: " + self.chal.real_flag
                 return
-            if self.rounds < self.max_rounds:
+            if self.rounds >= self.max_rounds:
                 self.finish_reason = "max rounds"
                 self.log.finish(self.finish_reason)
-                self.current_index += 1
-                self.switch2challenge()
-
-

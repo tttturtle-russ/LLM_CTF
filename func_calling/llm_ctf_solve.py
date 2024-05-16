@@ -22,6 +22,7 @@ from ctflogging import status
 from logger import Logger
 from mistral import MistralAgent
 from tools import TOOLSETS, GiveUpException
+from Env import CTFEnv
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
 
@@ -372,340 +373,340 @@ def generate_tool_description_and_args(tools: List[BaseTool]):
     return "\n\n".join(result)
 
 
-class CTFConversation:
-    def __init__(self, challenge: CTFChallenge, args: argparse.Namespace):
-        self.args = args
-        self.chal = challenge
-        self.messages = [
-            # {"role": "system", "content": SYSTEM_MESSAGE},
-        ]
-        # self.tool_choice = "auto"
-        self.tool_choice = 'any'
-        self.volume = self.chal.tmpdir
-        self.args.volume = self.volume
-        self.args.container_name = self.chal.challenge_container
-        # self.available_functions = {}
-        # for tool in TOOLSETS.get(self.chal.category, TOOLSETS['default']):
-        #     tool_instance = tool(self.chal, self.args.analysis)
-        #     self.available_functions[tool_instance.name] = tool_instance
-        self.tools = TOOLSETS.get(self.chal.category, TOOLSETS['default'])
-        for tool in self.tools:
-            if tool.name == "check_flag":
-                tool.real_flag = self.chal.real_flag
-            tool.namespace = args
-        self.system_prompt = SYSTEM_MESSAGE.format(
-            toolset=generate_tool_description_and_args(self.tools)
-        )
-        # self.tool_schemas = [tool.schema for tool in self.available_functions.values()]
-        self.rounds = 0
-        self.start_time = datetime.now()
-        self.finish_reason = "unknown"
-        self.log = self.chal.log
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                ("user", "{input}")
-            ]
-        )
-        self.chain = (prompt
-                      | MistralAgent()
-                      | JsonOutputParser()
-                      # | CommaSeparatedListOutputParser()
-                      | RunnablePassthrough.assign(output=self.tool_chain))
-
-    def tool_chain(self, model_output):
-        tool_map = {tool.name: tool for tool in self.tools}
-        chosen_tool = tool_map[model_output["name"]]
-        return itemgetter("arguments") | chosen_tool
-
-    def __enter__(self):
-        return self
-        # status.system_message(SYSTEM_MESSAGE)
-        # for tool in self.available_functions.values():
-        #     tool.setup()
-        # return self
-
-    # def run_tools(self, tool_calls):
-    #     tool_results = []
-    #     for tool_call in tool_calls:
-    #         function_name = tool_call.function.name
-    #         tool = self.available_functions.get(function_name)
-    #         if not tool:
-    #             function_response = json.dumps({"error": f"Unknown function {function_name}"})
-    #         else:
-    #             try:
-    #                 function_args = json.loads(tool_call.function.arguments)
-    #                 status.debug_message(f"Calling {function_name}({function_args})")
-    #                 self.log.log(f"Calling {function_name}({function_args})")
-    #                 function_response = tool.run(function_args)
-    #                 self.log.log(f"=> {function_response}")
-    #                 status.debug_message(f"=> {function_response}", truncate=True)
-    #             except json.JSONDecodeError as e:
-    #                 self.log.log(f"Error decoding arguments for {function_name}: {e}")
-    #                 status.debug_message(f"Error decoding arguments for {function_name}: {e}")
-    #                 self.log.log(f"Arguments: {tool_call.function.arguments}")
-    #                 status.debug_message(f"Arguments: {tool_call.function.arguments}")
-    #                 function_response = json.dumps(
-    #                     {"error": f"{type(e).__name__} decoding arguments for {function_name}: {e}"}
-    #                 )
-    #         tool_results.append({
-    #             "tool_call_id": tool_call.id,
-    #             "role": "tool",
-    #             "name": function_name,
-    #             "content": function_response,
-    #         })
-    #     return tool_results
-
-    def _parse_tool_calls_by_name(self, tool_name, response):
-        output = response['output']
-        self.log.tool_call(response)
-        if tool_name == 'give_up':
-            if output['give up'] is True:
-                raise GiveUpException()
-            else:
-                return {"error": output['error']['message']}
-        elif tool_name == 'run_command':
-            stdout = output['stdout']
-            stderr = output['stderr']
-            returncode = output['returncode']
-            if returncode != 0:
-                return {"error": f"Command failed with return code {returncode}: {stderr}"}
-            return {"stdout": stdout, "stderr": stderr}
-        elif tool_name == 'check_flag':
-            if 'correct' in output:
-                if output['correct'] is True:
-                    self.chal.solved = True
-                    return {"correct": True}
-                else:
-                    return {"correct": False}
-            else:
-                error = output['error']
-                return {"error": f"{error['tool']} failed with error: {error['message']}"}
-        elif tool_name == 'create_file':
-            if 'success' in output and response['output']['success'] is True:
-                return {"success": True, "path": output['path']}
-            else:
-                error = output['error']
-                return {"error": f"{error['tool']} failed with error: {error['message']}"}
-        elif tool_name == 'decompile_function':
-            if 'decompilation' in output:
-                return {"decompilation": output['decompilation']}
-            else:
-                error = output['error']
-                return {"error": f"{error['tool']} failed with error: {error['message']}"}
-        elif tool_name == 'disassemble_function':
-            if 'disassembly' in output:
-                return {"disassembly": output['disassembly']}
-            else:
-                error = output['error']
-                return {"error": f"{error['tool']} failed with error: {error['message']}"}
-        else:
-            return {"error": f"Unknown tool {tool_name}"}
-
-    def parse_tool_calls(self, response):
-        return self._parse_tool_calls_by_name(response['name'], response)
-
-    def run(self, message):
-        self.messages.append({"role": "user", "content": message})
-        self.log.log(f"User: {message}")
-        try:
-            response = self.chain.invoke({
-                "input": message
-            })
-        except KeyError as e:
-            self.log.log(f"Exception: {e}")
-            return f"Observation: Unknown tool {response['name']}"
-        except OutputParserException as e:
-            self.log.log(f"Exception: {e}")
-            return "Observation: Your response is not a valid JSON blob. Please check the format and try again."
-        except Exception:
-            self.log.log(f"Exception: {tb.format_exc()}")
-            return f"Observation: Error running tool: {tb.format_exc()}"
-        tool_result = self.parse_tool_calls(response)
-        if 'error' in tool_result:
-            return f"Observation: {tool_result['error']}"
-        obs = f"Observation: {json.dumps(tool_result)}"
-        self.messages.append({"role": "user", "content": obs})
-        self.log.log(f"Observation: {json.dumps(tool_result)}")
-        self.rounds += 1
-        if self.rounds > self.args.max_rounds:
-            self.log.log(f"Challenge is unsolved after {self.args.max_rounds} rounds; exiting")
-            status.print(
-                f"[red bold]Challenge is unsolved after {self.args.max_rounds} rounds; exiting[/red bold]",
-                markup=True
-            )
-            self.finish_reason = "max_rounds"
-        return obs
-
-    # def run_conversation_step(self, message) -> Tuple[bool, Optional[Dict]]:
-    #     self.messages.append({"role": "user", "content": message})
-    #     # logger.user_message(self.rounds, message)
-    #     status.user_message(message)
-    #     self.log.log(f"User: {message}")
-    #     # Step 1: send the initial message to the model
-    #     # response = client.chat.completions.create(
-    #     #     model=self.args.model,
-    #     #     messages=self.messages,
-    #     #     tools=self.tool_schemas,
-    #     #     tool_choice=self.tool_choice,
-    #     # )
-    #     response = self.chain.invoke({
-    #         "input": message
-    #     })
-    #     tool_result = self.parse_tool_calls(response)
-    #     # response_message = response.choices[0].message
-    #     # tool_calls = response_message.tool_calls
-    #     # if not response_message.content:
-    #     #     if tool_calls:
-    #     #         self.log.log("Assistant: 🤔 ...thinking... 🤔")
-    #     #         status.assistant_message("🤔 ...thinking... 🤔")
-    #     #     else:
-    #     #         self.log.log("Assistant: [ no response ]")
-    #     #         status.assistant_message("[ no response ]")
-    #     # else:
-    #     #     self.log.log(f"Assistant: {response_message.content}")
-    #     #     status.assistant_message(response_message.content)
-    #     # self.messages.append(response_message)  # extend conversation with assistant's reply
-    #     if self.chal.solved or (response_message.content and self.chal.check_flag(response_message.content)):
-    #         self.log.log("Challenge solved by our robot overlords!")
-    #         status.print(
-    #             "[red bold]Challenge solved by our robot overlords![/red bold]",
-    #             markup=True
-    #         )
-    #         self.finish_reason = "solved"
-    #
-    #         return True, None
-    #     # Check if the conversation has gone on too long
-    #     self.rounds += 1
-    #     if self.rounds > self.args.max_rounds:
-    #         self.log.log(f"Challenge is unsolved after {self.args.max_rounds} rounds; exiting")
-    #         status.print(
-    #             f"[red bold]Challenge is unsolved after {self.args.max_rounds} rounds; exiting[/red bold]",
-    #             markup=True
-    #         )
-    #         self.finish_reason = "max_rounds"
-    #
-    #         return False, None
-    #
-    #     # Step 2: if the model wants to call functions, call them and send back the results,
-    #     # repeating until the model doesn't want to call any more functions
-    #     while tool_calls:
-    #         self.log.log(f"Tool calls: {tool_calls}")
-    #         tool_results = self.run_tools(tool_calls)
-    #         self.messages.extend(tool_results)
-    #         # traverse the tool results and check if any error occurred
-    #         # if so, print the error message
-    #         # and generate a new prompt for LLM
-    #         for result in tool_results:
-    #             content = json.load(result["content"])
-    #             if "error" in content:
-    #                 self.log.log(f"Error running tool {result['name']}: {content['error']}")
-    #                 status.print(f"[red bold]Error running tool {result['name']}: {content['error']}[/red bold]",
-    #                              markup=True)
-    #                 return False, content["error"]
-    #         # Send the tool results back to the model
-    #         # response = client.chat.completions.create(
-    #         #     model=self.args.model,
-    #         #     messages=self.messages,
-    #         #     tools=self.tool_schemas,
-    #         #     tool_choice=self.tool_choice,
-    #         # )
-    #         response = self.chain.invoke({
-    #             "initial_message": self.system_prompt,
-    #             "chat_history": self.messages,
-    #             "input": message
-    #         })
-    #
-    #         # response_message = response.choices[0].message
-    #         # tool_calls = response_message.tool_calls
-    #         # if not response_message.content:
-    #         #     if tool_calls:
-    #         #         self.log.log("Assistant: 🤔 ...thinking... 🤔")
-    #         #         status.assistant_message("🤔 ...thinking... 🤔")
-    #         #     else:
-    #         #         self.log.log("Assistant: [ no response ]")
-    #         #         status.assistant_message("[ no response ]")
-    #         # else:
-    #         #     self.log.log(f"Assistant: {response_message.content}")
-    #         #     status.assistant_message(response_message.content)
-    #
-    #         # extend conversation with assistant's reply; we do this before yielding
-    #         # the response so that if we end up exiting the conversation loop, the
-    #         # conversation will be saved with the assistant's reply
-    #         if self.chal.solved or (response_message.content and self.chal.check_flag(response_message.content)):
-    #             status.print(
-    #                 "[red bold]Challenge solved by our robot overlords![/red bold]",
-    #                 markup=True
-    #             )
-    #             self.log.log("Challenge solved by our robot overlords!")
-    #             self.finish_reason = "solved"
-    #             return True, None
-    #         self.messages.append(response_message)
-    #         # Return control to the caller so they can check the response for the flag
-    #
-    #         # Check if the conversation has gone on too long
-    #         self.rounds += 1
-    #         if self.rounds > self.args.max_rounds:
-    #             status.print(
-    #                 f"[red bold]Challenge is unsolved after {self.args.max_rounds} rounds; exiting[/red bold]",
-    #                 markup=True
-    #             )
-    #             self.log.log(f"Challenge is unsolved after {self.args.max_rounds} rounds; exiting")
-    #             self.finish_reason = "max_rounds"
-    #             return False, None
-    #
-    #     return False, None
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.end_time = datetime.now()
-
-        # If there was an exception, convert it to a dict so we can serialize it
-        if exc_type is None:
-            exception_info = None
-        else:
-            # Extracting traceback details
-            tb_list = tb.format_tb(traceback)
-            tb_string = ''.join(tb_list)
-
-            # Constructing the JSON object
-            exception_info = {
-                "exception_type": str(exc_type.__name__),
-                "exception_message": str(exc_value),
-                "traceback": tb_string
-            }
-            self.finish_reason = "exception"
-            self.log.log(f"Exception: {exception_info['exception_type']}: {exception_info['exception_message']}")
-
-        # Save the conversation to a file
-        if self.args.logfile:
-            logfilename = Path(self.args.logfile)
-            logdir = logfilename.parent
-        else:
-            logdir = SCRIPT_DIR / f"logs/{self.chal.category}/{self.chal.chaldir.name}"
-            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-            logfilename = logdir / f"conversation.{timestamp}.json"
-        logdir.mkdir(parents=True, exist_ok=True)
-        logfilename.write_text(json.dumps(
-            {
-                "args": vars(self.args),
-                "messages": [
-                    (m if isinstance(m, dict) else m.model_dump())
-                    for m in self.messages
-                ],
-                "challenge": self.chal.challenge,
-                "solved": self.chal.solved,
-                "rounds": self.rounds,
-                "debug_log": status.debug_log,
-                "start_time": self.start_time.isoformat(),
-                "end_time": self.end_time.isoformat(),
-                "runtime_seconds": (self.end_time - self.start_time).total_seconds(),
-                "exception_info": exception_info,
-                "finish_reason": self.finish_reason,
-            },
-            indent=4
-        ))
-        status.print(f"Conversation saved to {logfilename}")
-        # for tool in self.available_functions.values():
-        #     tool.teardown(exc_type, exc_value, traceback)
+# class CTFConversation:
+#     def __init__(self, challenge: CTFChallenge, args: argparse.Namespace):
+#         self.args = args
+#         self.chal = challenge
+#         self.messages = [
+#             # {"role": "system", "content": SYSTEM_MESSAGE},
+#         ]
+#         # self.tool_choice = "auto"
+#         self.tool_choice = 'any'
+#         self.volume = self.chal.tmpdir
+#         self.args.volume = self.volume
+#         self.args.container_name = self.chal.challenge_container
+#         # self.available_functions = {}
+#         # for tool in TOOLSETS.get(self.chal.category, TOOLSETS['default']):
+#         #     tool_instance = tool(self.chal, self.args.analysis)
+#         #     self.available_functions[tool_instance.name] = tool_instance
+#         self.tools = TOOLSETS.get(self.chal.category, TOOLSETS['default'])
+#         for tool in self.tools:
+#             if tool.name == "check_flag":
+#                 tool.real_flag = self.chal.real_flag
+#             tool.namespace = args
+#         self.system_prompt = SYSTEM_MESSAGE.format(
+#             toolset=generate_tool_description_and_args(self.tools)
+#         )
+#         # self.tool_schemas = [tool.schema for tool in self.available_functions.values()]
+#         self.rounds = 0
+#         self.start_time = datetime.now()
+#         self.finish_reason = "unknown"
+#         self.log = self.chal.log
+#         prompt = ChatPromptTemplate.from_messages(
+#             [
+#                 ("user", "{input}")
+#             ]
+#         )
+#         self.chain = (prompt
+#                       | MistralAgent()
+#                       | JsonOutputParser()
+#                       # | CommaSeparatedListOutputParser()
+#                       | RunnablePassthrough.assign(output=self.tool_chain))
+#
+#     def tool_chain(self, model_output):
+#         tool_map = {tool.name: tool for tool in self.tools}
+#         chosen_tool = tool_map[model_output["name"]]
+#         return itemgetter("arguments") | chosen_tool
+#
+#     def __enter__(self):
+#         return self
+#         # status.system_message(SYSTEM_MESSAGE)
+#         # for tool in self.available_functions.values():
+#         #     tool.setup()
+#         # return self
+#
+#     # def run_tools(self, tool_calls):
+#     #     tool_results = []
+#     #     for tool_call in tool_calls:
+#     #         function_name = tool_call.function.name
+#     #         tool = self.available_functions.get(function_name)
+#     #         if not tool:
+#     #             function_response = json.dumps({"error": f"Unknown function {function_name}"})
+#     #         else:
+#     #             try:
+#     #                 function_args = json.loads(tool_call.function.arguments)
+#     #                 status.debug_message(f"Calling {function_name}({function_args})")
+#     #                 self.log.log(f"Calling {function_name}({function_args})")
+#     #                 function_response = tool.run(function_args)
+#     #                 self.log.log(f"=> {function_response}")
+#     #                 status.debug_message(f"=> {function_response}", truncate=True)
+#     #             except json.JSONDecodeError as e:
+#     #                 self.log.log(f"Error decoding arguments for {function_name}: {e}")
+#     #                 status.debug_message(f"Error decoding arguments for {function_name}: {e}")
+#     #                 self.log.log(f"Arguments: {tool_call.function.arguments}")
+#     #                 status.debug_message(f"Arguments: {tool_call.function.arguments}")
+#     #                 function_response = json.dumps(
+#     #                     {"error": f"{type(e).__name__} decoding arguments for {function_name}: {e}"}
+#     #                 )
+#     #         tool_results.append({
+#     #             "tool_call_id": tool_call.id,
+#     #             "role": "tool",
+#     #             "name": function_name,
+#     #             "content": function_response,
+#     #         })
+#     #     return tool_results
+#
+#     def _parse_tool_calls_by_name(self, tool_name, response):
+#         output = response['output']
+#         self.log.tool_call(response)
+#         if tool_name == 'give_up':
+#             if output['give up'] is True:
+#                 raise GiveUpException()
+#             else:
+#                 return {"error": output['error']['message']}
+#         elif tool_name == 'run_command':
+#             stdout = output['stdout']
+#             stderr = output['stderr']
+#             returncode = output['returncode']
+#             if returncode != 0:
+#                 return {"error": f"Command failed with return code {returncode}: {stderr}"}
+#             return {"stdout": stdout, "stderr": stderr}
+#         elif tool_name == 'check_flag':
+#             if 'correct' in output:
+#                 if output['correct'] is True:
+#                     self.chal.solved = True
+#                     return {"correct": True}
+#                 else:
+#                     return {"correct": False}
+#             else:
+#                 error = output['error']
+#                 return {"error": f"{error['tool']} failed with error: {error['message']}"}
+#         elif tool_name == 'create_file':
+#             if 'success' in output and response['output']['success'] is True:
+#                 return {"success": True, "path": output['path']}
+#             else:
+#                 error = output['error']
+#                 return {"error": f"{error['tool']} failed with error: {error['message']}"}
+#         elif tool_name == 'decompile_function':
+#             if 'decompilation' in output:
+#                 return {"decompilation": output['decompilation']}
+#             else:
+#                 error = output['error']
+#                 return {"error": f"{error['tool']} failed with error: {error['message']}"}
+#         elif tool_name == 'disassemble_function':
+#             if 'disassembly' in output:
+#                 return {"disassembly": output['disassembly']}
+#             else:
+#                 error = output['error']
+#                 return {"error": f"{error['tool']} failed with error: {error['message']}"}
+#         else:
+#             return {"error": f"Unknown tool {tool_name}"}
+#
+#     def parse_tool_calls(self, response):
+#         return self._parse_tool_calls_by_name(response['name'], response)
+#
+#     def run(self, message):
+#         self.messages.append({"role": "user", "content": message})
+#         self.log.log(f"User: {message}")
+#         try:
+#             response = self.chain.invoke({
+#                 "input": message
+#             })
+#         except KeyError as e:
+#             self.log.log(f"Exception: {e}")
+#             return f"Observation: Unknown tool {response['name']}"
+#         except OutputParserException as e:
+#             self.log.log(f"Exception: {e}")
+#             return "Observation: Your response is not a valid JSON blob. Please check the format and try again."
+#         except Exception:
+#             self.log.log(f"Exception: {tb.format_exc()}")
+#             return f"Observation: Error running tool: {tb.format_exc()}"
+#         tool_result = self.parse_tool_calls(response)
+#         if 'error' in tool_result:
+#             return f"Observation: {tool_result['error']}"
+#         obs = f"Observation: {json.dumps(tool_result)}"
+#         self.messages.append({"role": "user", "content": obs})
+#         self.log.log(f"Observation: {json.dumps(tool_result)}")
+#         self.rounds += 1
+#         if self.rounds > self.args.max_rounds:
+#             self.log.log(f"Challenge is unsolved after {self.args.max_rounds} rounds; exiting")
+#             status.print(
+#                 f"[red bold]Challenge is unsolved after {self.args.max_rounds} rounds; exiting[/red bold]",
+#                 markup=True
+#             )
+#             self.finish_reason = "max_rounds"
+#         return obs
+#
+#     # def run_conversation_step(self, message) -> Tuple[bool, Optional[Dict]]:
+#     #     self.messages.append({"role": "user", "content": message})
+#     #     # logger.user_message(self.rounds, message)
+#     #     status.user_message(message)
+#     #     self.log.log(f"User: {message}")
+#     #     # Step 1: send the initial message to the model
+#     #     # response = client.chat.completions.create(
+#     #     #     model=self.args.model,
+#     #     #     messages=self.messages,
+#     #     #     tools=self.tool_schemas,
+#     #     #     tool_choice=self.tool_choice,
+#     #     # )
+#     #     response = self.chain.invoke({
+#     #         "input": message
+#     #     })
+#     #     tool_result = self.parse_tool_calls(response)
+#     #     # response_message = response.choices[0].message
+#     #     # tool_calls = response_message.tool_calls
+#     #     # if not response_message.content:
+#     #     #     if tool_calls:
+#     #     #         self.log.log("Assistant: 🤔 ...thinking... 🤔")
+#     #     #         status.assistant_message("🤔 ...thinking... 🤔")
+#     #     #     else:
+#     #     #         self.log.log("Assistant: [ no response ]")
+#     #     #         status.assistant_message("[ no response ]")
+#     #     # else:
+#     #     #     self.log.log(f"Assistant: {response_message.content}")
+#     #     #     status.assistant_message(response_message.content)
+#     #     # self.messages.append(response_message)  # extend conversation with assistant's reply
+#     #     if self.chal.solved or (response_message.content and self.chal.check_flag(response_message.content)):
+#     #         self.log.log("Challenge solved by our robot overlords!")
+#     #         status.print(
+#     #             "[red bold]Challenge solved by our robot overlords![/red bold]",
+#     #             markup=True
+#     #         )
+#     #         self.finish_reason = "solved"
+#     #
+#     #         return True, None
+#     #     # Check if the conversation has gone on too long
+#     #     self.rounds += 1
+#     #     if self.rounds > self.args.max_rounds:
+#     #         self.log.log(f"Challenge is unsolved after {self.args.max_rounds} rounds; exiting")
+#     #         status.print(
+#     #             f"[red bold]Challenge is unsolved after {self.args.max_rounds} rounds; exiting[/red bold]",
+#     #             markup=True
+#     #         )
+#     #         self.finish_reason = "max_rounds"
+#     #
+#     #         return False, None
+#     #
+#     #     # Step 2: if the model wants to call functions, call them and send back the results,
+#     #     # repeating until the model doesn't want to call any more functions
+#     #     while tool_calls:
+#     #         self.log.log(f"Tool calls: {tool_calls}")
+#     #         tool_results = self.run_tools(tool_calls)
+#     #         self.messages.extend(tool_results)
+#     #         # traverse the tool results and check if any error occurred
+#     #         # if so, print the error message
+#     #         # and generate a new prompt for LLM
+#     #         for result in tool_results:
+#     #             content = json.load(result["content"])
+#     #             if "error" in content:
+#     #                 self.log.log(f"Error running tool {result['name']}: {content['error']}")
+#     #                 status.print(f"[red bold]Error running tool {result['name']}: {content['error']}[/red bold]",
+#     #                              markup=True)
+#     #                 return False, content["error"]
+#     #         # Send the tool results back to the model
+#     #         # response = client.chat.completions.create(
+#     #         #     model=self.args.model,
+#     #         #     messages=self.messages,
+#     #         #     tools=self.tool_schemas,
+#     #         #     tool_choice=self.tool_choice,
+#     #         # )
+#     #         response = self.chain.invoke({
+#     #             "initial_message": self.system_prompt,
+#     #             "chat_history": self.messages,
+#     #             "input": message
+#     #         })
+#     #
+#     #         # response_message = response.choices[0].message
+#     #         # tool_calls = response_message.tool_calls
+#     #         # if not response_message.content:
+#     #         #     if tool_calls:
+#     #         #         self.log.log("Assistant: 🤔 ...thinking... 🤔")
+#     #         #         status.assistant_message("🤔 ...thinking... 🤔")
+#     #         #     else:
+#     #         #         self.log.log("Assistant: [ no response ]")
+#     #         #         status.assistant_message("[ no response ]")
+#     #         # else:
+#     #         #     self.log.log(f"Assistant: {response_message.content}")
+#     #         #     status.assistant_message(response_message.content)
+#     #
+#     #         # extend conversation with assistant's reply; we do this before yielding
+#     #         # the response so that if we end up exiting the conversation loop, the
+#     #         # conversation will be saved with the assistant's reply
+#     #         if self.chal.solved or (response_message.content and self.chal.check_flag(response_message.content)):
+#     #             status.print(
+#     #                 "[red bold]Challenge solved by our robot overlords![/red bold]",
+#     #                 markup=True
+#     #             )
+#     #             self.log.log("Challenge solved by our robot overlords!")
+#     #             self.finish_reason = "solved"
+#     #             return True, None
+#     #         self.messages.append(response_message)
+#     #         # Return control to the caller so they can check the response for the flag
+#     #
+#     #         # Check if the conversation has gone on too long
+#     #         self.rounds += 1
+#     #         if self.rounds > self.args.max_rounds:
+#     #             status.print(
+#     #                 f"[red bold]Challenge is unsolved after {self.args.max_rounds} rounds; exiting[/red bold]",
+#     #                 markup=True
+#     #             )
+#     #             self.log.log(f"Challenge is unsolved after {self.args.max_rounds} rounds; exiting")
+#     #             self.finish_reason = "max_rounds"
+#     #             return False, None
+#     #
+#     #     return False, None
+#
+#     def __exit__(self, exc_type, exc_value, traceback):
+#         self.end_time = datetime.now()
+#
+#         # If there was an exception, convert it to a dict so we can serialize it
+#         if exc_type is None:
+#             exception_info = None
+#         else:
+#             # Extracting traceback details
+#             tb_list = tb.format_tb(traceback)
+#             tb_string = ''.join(tb_list)
+#
+#             # Constructing the JSON object
+#             exception_info = {
+#                 "exception_type": str(exc_type.__name__),
+#                 "exception_message": str(exc_value),
+#                 "traceback": tb_string
+#             }
+#             self.finish_reason = "exception"
+#             self.log.log(f"Exception: {exception_info['exception_type']}: {exception_info['exception_message']}")
+#
+#         # Save the conversation to a file
+#         if self.args.logfile:
+#             logfilename = Path(self.args.logfile)
+#             logdir = logfilename.parent
+#         else:
+#             logdir = SCRIPT_DIR / f"logs/{self.chal.category}/{self.chal.chaldir.name}"
+#             timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+#             logfilename = logdir / f"conversation.{timestamp}.json"
+#         logdir.mkdir(parents=True, exist_ok=True)
+#         logfilename.write_text(json.dumps(
+#             {
+#                 "args": vars(self.args),
+#                 "messages": [
+#                     (m if isinstance(m, dict) else m.model_dump())
+#                     for m in self.messages
+#                 ],
+#                 "challenge": self.chal.challenge,
+#                 "solved": self.chal.solved,
+#                 "rounds": self.rounds,
+#                 "debug_log": status.debug_log,
+#                 "start_time": self.start_time.isoformat(),
+#                 "end_time": self.end_time.isoformat(),
+#                 "runtime_seconds": (self.end_time - self.start_time).total_seconds(),
+#                 "exception_info": exception_info,
+#                 "finish_reason": self.finish_reason,
+#             },
+#             indent=4
+#         ))
+#         status.print(f"Conversation saved to {logfilename}")
+#         # for tool in self.available_functions.values():
+#         #     tool.teardown(exc_type, exc_value, traceback)
 
 
 def main():
@@ -726,12 +727,10 @@ def main():
     args = parser.parse_args()
     status.set(quiet=args.quiet, debug=args.debug)
     challenge_json = Path(args.challenge_json).resolve()
-    with CTFChallenge(challenge_json, args) as chal, \
-            CTFConversation(chal, args) as convo:
-        obs = convo.system_prompt + chal.prompt
+    with CTFEnv() as convo:
         try:
             while True:
-                obs = convo.run(obs)
+                convo.step()
                 # solved, error = convo.run_conversation_step(next_msg)
                 # if solved:
                 #     return 0
