@@ -21,8 +21,7 @@ from openai import OpenAI
 from ctflogging import status
 from logger import Logger
 from mistral import MistralAgent
-from tools import TOOLSETS, GiveUpException
-from Env import CTFEnv
+from Env import CTFEnv, GiveUpException
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
 
