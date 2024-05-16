@@ -74,5 +74,5 @@ RUN pip install pwntools ipython gmpy2
 RUN sage -pip install pycrypto
 
 # Copy in the entrypoint script
-#COPY entrypoint.sh /home/$USERNAME/.entrypoint.sh
-#CMD ["bash", "/home/ctfplayer/.entrypoint.sh"]
+COPY entrypoint.sh /home/$USERNAME/.entrypoint.sh
+CMD ["bash", "/home/ctfplayer/.entrypoint.sh"]
