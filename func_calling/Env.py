@@ -1160,6 +1160,8 @@ def generate_tool_description_and_args(tools: List[BaseTool]):
         print(args)
         print()
         for k, v in args.items():
+            print(k)
+            print(v)
             func_args[k] = v['type']
         result.append(f"{tool.name}: {json.dumps(func_args)}")
     return "\n\n".join(result)
