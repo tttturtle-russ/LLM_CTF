@@ -1153,17 +1153,12 @@ class CTFChallenge:
 
 def generate_tool_description_and_args(tools: List[BaseTool]):
     result = []
-    print(tools)
     for tool in tools:
         func_args = {}
         args = tool.args
-        print(tool.name)
-        print(args)
-        print()
         for k, v in args.items():
-            print(k)
-            print(v)
-            func_args[k] = v['type']
+            if 'type' in v:
+                func_args[k] = v['type']
         result.append(f"{tool.name}: {json.dumps(func_args)}")
     return "\n\n".join(result)
 
