@@ -199,7 +199,7 @@ class DockerHelper:
             ['docker', 'exec', self.container] + \
             ['--user', 'ctfbench'] + \
             ['bash', '-c', command_with_arguments],
-            capture_output=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
 SCRIPT_DIR = Path(__file__).parent.parent.resolve()
