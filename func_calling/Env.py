@@ -217,7 +217,7 @@ class Decompile(BaseTool):
     args_schema: Type[BaseModel] = DecompileInput
 
     _decomp_cache: Dict = {}
-    env: DockerHelper
+    env: DockerHelper = None
 
     @staticmethod
     def handler(output) -> Dict:
@@ -301,7 +301,7 @@ class Disassemble(BaseTool):
     args_schema: Type[BaseModel] = DisassembleInput
 
     _disasm_cache: Dict = {}
-    env: DockerHelper
+    env: DockerHelper = None
 
     @staticmethod
     def handler(output) -> Dict:
@@ -383,7 +383,7 @@ class ListenCommandTool(BaseTool):
     name = "net_listen"
     description = "Listen on a port for incoming connections"
     args_schema: Type[BaseModel] = ListenCommandToolInput
-    env: DockerHelper
+    env: DockerHelper = None
 
     @staticmethod
     def handler(output) -> Dict:
@@ -474,7 +474,7 @@ class RequestCommandTool(BaseTool):
     name = "net_request"
     description = "Make a request to a server"
     args_schema: Type[BaseModel] = RequestCommandToolInput
-    env: DockerHelper
+    env: DockerHelper = None
 
     def _run(
             self,
@@ -523,7 +523,7 @@ class ScanCommandTool(BaseTool):
     name = "net_scan"
     description = "Scan for open ports on a host"
     args_schema: Type[BaseModel] = ScanCommandToolInput
-    env: DockerHelper
+    env: DockerHelper = None
 
     def _run(
             self,
@@ -572,7 +572,7 @@ class InstallPkg(BaseTool):
     name = "install_pkg"
     description = "Install a package using pip or apt-get"
     args_schema: Type[BaseModel] = InstallPkgInput
-    env: DockerHelper
+    env: DockerHelper = None
 
     @staticmethod
     def handler(output) -> Dict:
@@ -615,7 +615,7 @@ class KillProcess(BaseTool):
     name = "kill_process"
     description = "Kill a process using the kill command"
     args_schema: Type[BaseModel] = KillProcessInput
-    env: DockerHelper
+    env: DockerHelper = None
 
     @staticmethod
     def handler(output) -> Dict:
@@ -662,6 +662,8 @@ class GiveUp(BaseTool):
     name = "give_up"
     description = "Give up on the challenge"
     args_schema: Type[BaseModel] = GiveUpInput
+
+    env: DockerHelper = None
 
     @staticmethod
     def handler(output) -> Dict:
@@ -725,7 +727,7 @@ class ReadFile(BaseTool):
     name = "read_file"
     description = "Read the contents of a file"
     args_schema: Type[BaseModel] = ReadFileInput
-    env: DockerHelper
+    env: DockerHelper = None
 
     def readfile(
             self,
@@ -788,7 +790,7 @@ class WriteFile(BaseTool):
     name = "write_file"
     description = "Write content to a file"
     args_schema: Type[BaseModel] = WriteFileInput
-    env: DockerHelper
+    env: DockerHelper = None
 
     def writefile(
             self,
@@ -852,7 +854,7 @@ class CreateFile(BaseTool):
     name = "create_file"
     description = "Create a empty file"
     args_schema: Type[BaseModel] = CreateFileInput
-    env: DockerHelper
+    env: DockerHelper = None
 
     def createfile(
             self,
@@ -906,7 +908,7 @@ class RemoveFile(BaseTool):
     name = "remove_file"
     description = "Remove a file"
     args_schema: Type[BaseModel] = RemoveFileInput
-    env: DockerHelper
+    env: DockerHelper = None
 
     def removefile(
             self,
@@ -960,7 +962,7 @@ class CheckFlag(BaseTool):
     args_schema: Type[BaseModel] = CheckFlagInput
 
     real_flag: str = None
-    env: DockerHelper
+    env: DockerHelper = None
 
     @staticmethod
     def handler(output) -> Dict:
@@ -978,7 +980,6 @@ class CheckFlag(BaseTool):
             flag: str = None,
             run_manager: Optional[CallbackManagerForToolRun] = None
     ) -> Dict:
-        self.env.log.tool_call()
         if flag is None:
             return {
                 "error": {
