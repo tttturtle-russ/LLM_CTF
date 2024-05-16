@@ -16,7 +16,6 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_core.tools import BaseTool
 
 from mistral import MistralAgent
-from GiveUp import GiveUpException
 from logger import Logger
 from ctflogging import status
 
