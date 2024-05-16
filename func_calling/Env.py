@@ -1226,11 +1226,15 @@ class CTFEnv:
 
     # execute command in the container
     def exec(self, command_with_arguments):
-        return subprocess.run(
-            ['docker', 'exec', self.container] + \
-            ['--user', 'ctfbench'] + \
-            ['bash', '-c', command_with_arguments],
-            capture_output=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            p = subprocess.run(
+                ['docker', 'exec', self.container] + \
+                ['--user', 'ctfbench'] + \
+                ['bash', '-c', command_with_arguments],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            return p
+        except subprocess.CalledProcessError as e:
+            return None
 
     # switch to next challenge
     def switch2challenge(self):
@@ -1280,7 +1284,7 @@ class CTFEnv:
     def copy(self, srcfile):
         subprocess.run(
             ['docker', 'cp', srcfile, f"{self.container}:/home/ctfbench/ctf_files/"],
-            capture_output=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
 
     def run_code(self, language, code):
