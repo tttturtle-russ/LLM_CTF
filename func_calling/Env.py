@@ -1153,6 +1153,7 @@ class CTFChallenge:
 
 def generate_tool_description_and_args(tools: List[BaseTool]):
     result = []
+    print(tools)
     for tool in tools:
         func_args = {}
         args = tool.args
