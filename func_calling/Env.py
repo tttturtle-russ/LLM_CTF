@@ -993,22 +993,24 @@ class CheckFlag(BaseTool):
         else:
             return {"correct": False}
 
+# from CheckFlag import CHECKFLAGTOOLS
+# from FileCommand import FILETOOLS
+# from GiveUp import GIVEUPTOOLS
+# from ProcessCommand import PROCESSTOOLS
+# from PkgCommand import PKGTOOLS
+# from NetTools import NETTOOLS
+# from Reverse import REVERSETOOLS
+#
+# DEFAULT_TOOLSET = REVERSETOOLS + FILETOOLS + CHECKFLAGTOOLS + GIVEUPTOOLS + PROCESSTOOLS + PKGTOOLS + NETTOOLS
+#
+# TOOLSETS = {
+#     "crypto": FILETOOLS + CHECKFLAGTOOLS + GIVEUPTOOLS + PKGTOOLS + PROCESSTOOLS,
+#     "misc": FILETOOLS + CHECKFLAGTOOLS + GIVEUPTOOLS + PROCESSTOOLS + PKGTOOLS + NETTOOLS,
+#     "forensics": FILETOOLS + CHECKFLAGTOOLS + GIVEUPTOOLS + PKGTOOLS + PROCESSTOOLS + NETTOOLS,
+#     "default": DEFAULT_TOOLSET,
+# }
 
-CHECKFLAGTOOLS = [CheckFlag()]
-FILETOOLS = [ReadFile(), WriteFile(), CreateFile(), RemoveFile()]
-GIVEUPTOOLS = [GiveUp()]
-PROCESSTOOLS = [KillProcess()]
-PKGTOOLS = [InstallPkg()]
-NETTOOLS = [ListenCommandTool(), RequestCommandTool(), ScanCommandTool()]
-REVERSETOOLS = [Decompile(), Disassemble()]
-DEFAULT_TOOLSET = REVERSETOOLS + FILETOOLS + CHECKFLAGTOOLS + GIVEUPTOOLS + PROCESSTOOLS + PKGTOOLS + NETTOOLS
-
-TOOLSETS = {
-    "crypto": FILETOOLS + CHECKFLAGTOOLS + GIVEUPTOOLS + PKGTOOLS + PROCESSTOOLS,
-    "misc": FILETOOLS + CHECKFLAGTOOLS + GIVEUPTOOLS + PROCESSTOOLS + PKGTOOLS + NETTOOLS,
-    "forensics": FILETOOLS + CHECKFLAGTOOLS + GIVEUPTOOLS + PKGTOOLS + PROCESSTOOLS + NETTOOLS,
-    "default": DEFAULT_TOOLSET,
-}
+from tools import DEFAULT_TOOLSET, TOOLSETS
 
 toolhandlers = {
     tool.name: tool.handler for tool in DEFAULT_TOOLSET
@@ -1059,7 +1061,8 @@ class CTFChallenge:
         self.log_dir = Path(__file__).resolve().parent / "logs" / self.category / self.challenge["name"]
         self.log = Logger(
             log_file=self.log_dir / "mistral.conversation.json",
-            logger=logging.getLogger(self.challenge["name"])
+            logger=logging.getLogger(self.challenge["name"]),
+            gold_file=""
         )
 
     def get_server_description(self):
@@ -1325,6 +1328,7 @@ class CTFEnv:
             toolcalls = self._parse_response(response)
             if 'error' in toolcalls:
                 self.obs = f"Observation: {toolcalls['error']}"
+                self.log.assistant_message(self.obs)
                 return
             self.obs = f"Observation: {json.dumps(toolcalls)}"
         except KeyError as e:

@@ -8,7 +8,17 @@ from langchain.tools import BaseTool
 from langchain_core.callbacks import CallbackManagerForToolRun
 from typing import Dict, Optional, Type, Union, List
 
-from Env import CTFEnv
+class DockerHelper:
+    def __init__(self, chal, container):
+        self.container = container
+        self.chal = chal
+
+    def exec(self, command_with_arguments):
+        return subprocess.run(
+            ['docker', 'exec', self.container] + \
+            ['--user', 'ctfbench'] + \
+            ['bash', '-c', command_with_arguments],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 SCRIPT_DIR = Path(__file__).parent.parent.resolve()
 GHIDRA = SCRIPT_DIR / 'ghidra_11.0_PUBLIC/support/analyzeHeadless'
@@ -25,7 +35,7 @@ class Decompile(BaseTool):
     args_schema: Type[BaseModel] = DecompileInput
 
     _decomp_cache: Dict = {}
-    env: CTFEnv
+    env: DockerHelper
 
     @staticmethod
     def handler(output) -> Dict:
@@ -109,7 +119,7 @@ class Disassemble(BaseTool):
     args_schema: Type[BaseModel] = DisassembleInput
 
     _disasm_cache: Dict = {}
-    env: CTFEnv
+    env: DockerHelper
 
     @staticmethod
     def handler(output) -> Dict:
@@ -191,7 +201,7 @@ class ListenCommandTool(BaseTool):
     name = "net_listen"
     description = "Listen on a port for incoming connections"
     args_schema: Type[BaseModel] = ListenCommandToolInput
-    env: CTFEnv
+    env: DockerHelper
 
     @staticmethod
     def handler(output) -> Dict:
@@ -282,7 +292,7 @@ class RequestCommandTool(BaseTool):
     name = "net_request"
     description = "Make a request to a server"
     args_schema: Type[BaseModel] = RequestCommandToolInput
-    env: CTFEnv
+    env: DockerHelper
 
     def _run(
             self,
@@ -331,7 +341,7 @@ class ScanCommandTool(BaseTool):
     name = "net_scan"
     description = "Scan for open ports on a host"
     args_schema: Type[BaseModel] = ScanCommandToolInput
-    env: CTFEnv
+    env: DockerHelper
 
     def _run(
             self,
@@ -380,7 +390,7 @@ class InstallPkg(BaseTool):
     name = "install_pkg"
     description = "Install a package using pip or apt-get"
     args_schema: Type[BaseModel] = InstallPkgInput
-    env: CTFEnv
+    env: DockerHelper
 
     @staticmethod
     def handler(output) -> Dict:
@@ -423,7 +433,7 @@ class KillProcess(BaseTool):
     name = "kill_process"
     description = "Kill a process using the kill command"
     args_schema: Type[BaseModel] = KillProcessInput
-    env: CTFEnv
+    env: DockerHelper
 
     @staticmethod
     def handler(output) -> Dict:
@@ -533,7 +543,7 @@ class ReadFile(BaseTool):
     name = "read_file"
     description = "Read the contents of a file"
     args_schema: Type[BaseModel] = ReadFileInput
-    env: CTFEnv
+    env: DockerHelper
 
     def readfile(
             self,
@@ -596,7 +606,7 @@ class WriteFile(BaseTool):
     name = "write_file"
     description = "Write content to a file"
     args_schema: Type[BaseModel] = WriteFileInput
-    env: CTFEnv
+    env: DockerHelper
 
     def writefile(
             self,
@@ -660,7 +670,7 @@ class CreateFile(BaseTool):
     name = "create_file"
     description = "Create a empty file"
     args_schema: Type[BaseModel] = CreateFileInput
-    env: CTFEnv
+    env: DockerHelper
 
     def createfile(
             self,
@@ -714,7 +724,7 @@ class RemoveFile(BaseTool):
     name = "remove_file"
     description = "Remove a file"
     args_schema: Type[BaseModel] = RemoveFileInput
-    env: CTFEnv
+    env: DockerHelper
 
     def removefile(
             self,
@@ -768,7 +778,7 @@ class CheckFlag(BaseTool):
     args_schema: Type[BaseModel] = CheckFlagInput
 
     real_flag: str = None
-    env: CTFEnv
+    env: DockerHelper
 
     @staticmethod
     def handler(output) -> Dict:
@@ -786,7 +796,6 @@ class CheckFlag(BaseTool):
             flag: str = None,
             run_manager: Optional[CallbackManagerForToolRun] = None
     ) -> Dict:
-        self.env.log.tool_call()
         if flag is None:
             return {
                 "error": {
