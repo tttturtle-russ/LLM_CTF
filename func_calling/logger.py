@@ -10,7 +10,7 @@ from typing import Union, List, Dict
 import re
 import difflib
 
-from func_calling.util import CodeParser, SimilarityCalculator
+from util import CodeParser, SimilarityCalculator
 
 
 class Logger:
