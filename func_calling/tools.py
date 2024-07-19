@@ -810,7 +810,7 @@ class CheckFlag(BaseTool):
             return {"correct": False}
 
 
-CHECKFLAGTOOLS = [CheckFlag()]
+CHECKFLAGTOOLS = [CheckFlag(flag="xxx")]
 FILETOOLS = [ReadFile(), WriteFile(), CreateFile(), RemoveFile()]
 GIVEUPTOOLS = [GiveUp()]
 PROCESSTOOLS = [KillProcess()]
