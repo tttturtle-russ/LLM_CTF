@@ -656,7 +656,7 @@ class GiveUp(BaseTool):
 
     @staticmethod
     def handler(output) -> Dict:
-        if output['give up'] is True:
+        if output['give_up'] is True:
             raise GiveUpException()
         else:
             return {"error": output['error']['message']}
@@ -1327,13 +1327,13 @@ class CTFEnv:
             self.log.finish(self.finish_reason)
             self.obs = "Final Answer: I give up."
             return
-        except OutputParserException:
+        except Exception:
             obs = "Observation: Your response is not a valid JSON blob. Please check the format and try again."
             self.obs = obs
             return
-        except Exception:
-            obs = f"Observation: Error running tool: {tb.format_exc()}"
-            self.obs = obs
+        # except Exception:
+        #     obs = f"Observation: You response is not the right format."
+        #     self.obs = obs
         finally:
             self.log.assistant_message(self.obs)
             self.rounds += 1
