@@ -1330,7 +1330,6 @@ class CTFEnv:
         except Exception:
             obs = "Observation: Your response is not a valid JSON blob. Please check the format and try again."
             self.obs = obs
-            return
         # except Exception:
         #     obs = f"Observation: You response is not the right format."
         #     self.obs = obs
