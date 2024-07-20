@@ -757,6 +757,14 @@ def main():
                     convo.log.log(f"Challenge is unsolved after {args.max_rounds} rounds; exiting")
                     convo.finish_reason = "max_rounds"
                     return 1
+                if convo.finish_reason == "give up":
+                    convo.log.log("The LLM decided to give up! NGMI.")
+                    status.print(
+                        "[red bold]The LLM decided to give up! NGMI.[/red bold]",
+                        markup=True
+                    )
+                    convo.finish_reason = "give_up"
+                    return 0
                 # Otherwise, we returned because the model didn't respond with anything; prompt
                 # it to keep going.
                 # next_msg = "Please proceed to the next step using your best judgment."
