@@ -1328,7 +1328,7 @@ class CTFEnv:
             self.obs = "Final Answer: I give up."
             return
         except Exception as e:
-            print(e)
+            print(e.__traceback__)
             obs = "Observation: Your response is not a valid JSON blob. Please check the format and try again."
             self.obs = obs
         # except Exception:
