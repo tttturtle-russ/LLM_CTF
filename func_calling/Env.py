@@ -4,6 +4,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import traceback
 import traceback as tb
 from operator import itemgetter
 from pathlib import Path
@@ -1328,7 +1329,7 @@ class CTFEnv:
             self.obs = "Final Answer: I give up."
             return
         except Exception as e:
-            print(e.__traceback__)
+            print(traceback.format_exception(e))
             obs = "Observation: Your response is not a valid JSON blob. Please check the format and try again."
             self.obs = obs
         # except Exception:
