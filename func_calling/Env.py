@@ -1003,9 +1003,9 @@ TOOLSETS = {
 toolhandlers = {
     tool.name: tool.handler for tool in DEFAULT_TOOLSET
 }
-print(toolhandlers)
+
 class CTFChallenge:
-    def __init__(self, challenge_json):
+    def __init__(self, challenge_json, index):
         self.challenge_json = challenge_json.resolve()
         self.category = self.challenge_json.parent.parent.name
         self.chaldir = self.challenge_json.parent
@@ -1047,7 +1047,7 @@ class CTFChallenge:
         self.solved = False
         self.log_dir = Path(__file__).resolve().parent / "logs" / self.category / self.challenge["name"]
         self.log = Logger(
-            log_file=self.log_dir / "mistral.conversation.json",
+            log_file=self.log_dir / f"mistral.conversation{index}.json",
             logger=logging.getLogger(self.challenge["name"]),
             gold_file=self.chaldir / "solution.json"
         )
@@ -1160,9 +1160,8 @@ class CTFEnv:
         # real all challenge.json files
         self.challenge_jsons = [chal for chal in (Path.cwd() / "chals").rglob("challenge.json")]
         self.chal_dirs = [jsondir.parent for jsondir in self.challenge_jsons]
-        print(self.chal_dirs)
         self.current_index = 0
-        self.chal = CTFChallenge(self.challenge_jsons[self.current_index])
+        self.chal = CTFChallenge(self.challenge_jsons[self.current_index], self.current_index)
         # in the unified environment, the container name is always ctfbench
         self.container = "ctfbench"
         self.chal_dir = self.chal_dirs[self.current_index]
@@ -1329,7 +1328,6 @@ class CTFEnv:
             self.obs = "Final Answer: I give up."
             return
         except Exception as e:
-            print(traceback.format_exception(e))
             obs = "Observation: Your response is not a valid JSON blob. Please check the format and try again."
             self.obs = obs
         # except Exception:
