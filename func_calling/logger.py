@@ -26,7 +26,6 @@ class Logger:
             self.gold = json.load(f)
         self.len = len(self.gold)
         self.gold_path = None
-        print(self.gold)
         self.score = 0.0
 
     def log(self, message: str):
