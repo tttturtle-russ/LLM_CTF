@@ -18,7 +18,7 @@ fi
 
 for category in $categories; do
     for model in /home/haoyang/Mistral-7B-Instruct-v0.2; do
-        for chal in chals/"${category}"/*/challenge.json; do
+        for chal in chals/CTF/CSAW-CTF-2016-Quals/"${category}"/*/challenge.json; do
             chalname=$(basename "$(dirname "$chal")")
             model_name=$(basename "${model}")
             for i in {1..10}; do
