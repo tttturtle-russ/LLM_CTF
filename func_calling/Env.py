@@ -1180,6 +1180,7 @@ class CTFEnv:
 
     def tool_chain(self, model_output):
         self.log.assistant_message(model_output)
+        print(f"\n\n\nLog: {model_output}")
         tool_map = {tool.name: tool for tool in self.tools}
         chosen_tool = tool_map[model_output["name"]]
         return itemgetter("arguments") | chosen_tool
