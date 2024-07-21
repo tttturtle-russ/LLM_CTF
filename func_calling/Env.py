@@ -192,8 +192,6 @@ class DockerHelper:
             [self.container] + \
             ['bash', '-c', command_with_arguments],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print(f"\n\n\n\nExec: {command_with_arguments}\nStdout: {p.stdout}\nStderr: {p.stderr}")
-        input()
         return p
 
 
@@ -1202,12 +1200,10 @@ class CTFEnv:
     def exec(self, command_with_arguments):
         try:
             p = subprocess.run(
-                ['docker', 'exec', self.container] + \
-                ['--user', 'ctfbench'] + \
+                ['docker', 'exec', '--user', 'ctfbench'] + \
+                [self.container] + \
                 ['bash', '-c', command_with_arguments],
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            print(f"Exec {command_with_arguments}: {p.stdout}")
-            input()
             return p
         except subprocess.CalledProcessError as e:
             return None
@@ -1298,14 +1294,9 @@ class CTFEnv:
         self.log.user_message(self.rounds, self.obs)
         try:
             response = self.llm.invoke({"input": self.obs})
-            print(response)
-            input()
             toolcalls = self._parse_response(response)
-            print(toolcalls)
-            input()
             if 'error' in toolcalls:
                 self.obs = f"Observation: {toolcalls['error']}"
-                input()
                 self.log.assistant_message(self.obs)
                 return
             self.obs = f"Observation: {json.dumps(toolcalls)}"
