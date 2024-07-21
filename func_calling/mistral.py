@@ -17,7 +17,6 @@ openai.api_key = "na"
 class MistralAgent(BaseChatModel):
     name = "Mistral"
     model_name = "/home/haoyang/Mistral-7B-Instruct-v0.2"
-    log = None
     _messages = []
 
     @staticmethod
@@ -46,7 +45,6 @@ class MistralAgent(BaseChatModel):
         content = repair_json(resp.choices[0].message.content)
         self._messages.append({"role": "assistant", "content": content})
         status.assistant_message(content)
-        self.log.assistant_message(content)
         print(f"Messages: {self._messages}")
         input()
         return ChatResult(
