@@ -1167,7 +1167,7 @@ class CTFEnv:
             ]
         )
         self.llm = (self.template
-                    | MistralAgent(self.log)
+                    | MistralAgent()
                     | JsonOutputParser()
                     | RunnablePassthrough.assign(output=self.tool_chain))
 
