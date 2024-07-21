@@ -188,8 +188,8 @@ class DockerHelper:
 
     def exec(self, command_with_arguments):
         p = subprocess.run(
-            ['docker', 'exec', self.container] + \
-            ['--user', 'ctfbench'] + \
+            ['docker', 'exec', '--user', 'ctfbench'] + \
+            [self.container] + \
             ['bash', '-c', command_with_arguments],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print(f"\n\n\n\nExec: {command_with_arguments}:\nResult: {p.stdout}")
