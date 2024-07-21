@@ -1295,6 +1295,8 @@ class CTFEnv:
         try:
             response = self.llm.invoke({"input": self.obs})
             toolcalls = self._parse_response(response)
+            print(response)
+            input()
             if 'error' in toolcalls:
                 self.obs = f"Observation: {toolcalls['error']}"
             else:
