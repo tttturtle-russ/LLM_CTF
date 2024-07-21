@@ -1232,6 +1232,8 @@ class CTFEnv:
                 ['--user', 'ctfbench'] + \
                 ['bash', '-c', command_with_arguments],
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            print(f"Exec {command_with_arguments}: {p.stdout}")
+            input()
             return p
         except subprocess.CalledProcessError as e:
             return None
