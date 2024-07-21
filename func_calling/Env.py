@@ -187,11 +187,14 @@ class DockerHelper:
         self.chal = chal
 
     def exec(self, command_with_arguments):
-        return subprocess.run(
+        p = subprocess.run(
             ['docker', 'exec', self.container] + \
             ['--user', 'ctfbench'] + \
             ['bash', '-c', command_with_arguments],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        print(f"\n\n\n\nExec: {command_with_arguments}:\nResult: {p.stdout}")
+        input()
+        return p
 
 
 SCRIPT_DIR = Path(__file__).parent.parent.resolve()
@@ -679,38 +682,9 @@ class GiveUp(BaseTool):
         return {"give_up": True}
 
 
-class ReadFileCommand(str, Enum):
-    """
-    Enum for the read_file command
-    These command types can read both ascii and binary files
-    """
-    CAT = "cat"
-    HEAD = "head"
-    TAIL = "tail"
-    HEXDUMP = "hexdump"
-    OBJDUMP = "objdump"
-    STRINGS = "strings"
-
-
-class WriteFileCommand(str, Enum):
-    """
-    Enum for the write_file command
-    These command types can write both ascii and binary files
-    """
-    ECHO = "echo"
-    PRINTF = "printf"
-
-
-class CreateFileCommand(str, Enum):
-    """
-    Enum for the create_file command
-    These command types can write both ascii and binary files
-    """
-    TOUCH = "touch"
-
 
 class ReadFileInput(BaseModel):
-    command: ReadFileCommand = Field(description="the command to use to read the file")
+    command: str = Field(description="the command to use to read the file")
     arguments: Optional[Union[str, List[str]]] = Field(description="arguments to pass to the command", default=None)
     path: str = Field(description="path to the file to read")
 
@@ -723,7 +697,7 @@ class ReadFile(BaseTool):
 
     def readfile(
             self,
-            command: ReadFileCommand,
+            command: str,
             arguments: Optional[List[str]],
             path: str
     ) -> Dict:
@@ -755,7 +729,7 @@ class ReadFile(BaseTool):
 
     def _run(
             self,
-            command: ReadFileCommand,
+            command: str,
             arguments: Optional[Union[str, List[str]]],
             path: str,
             run_manager: Optional[CallbackManagerForToolRun] = None,
@@ -773,7 +747,7 @@ class ReadFile(BaseTool):
 
 
 class WriteFileInput(BaseModel):
-    command: WriteFileCommand = Field(description="the command to use to write the file")
+    command: str = Field(description="the command to use to write the file")
     path: str = Field(description="path to the file to write")
     content: str = Field(description="content to write to the file")
 
@@ -786,7 +760,7 @@ class WriteFile(BaseTool):
 
     def writefile(
             self,
-            command: WriteFileCommand,
+            command: str,
             path: str,
             content: str
     ) -> Dict:
@@ -815,7 +789,7 @@ class WriteFile(BaseTool):
 
     def _run(
             self,
-            command: WriteFileCommand,
+            command: str,
             path: str,
             content: str,
             run_manager: Optional[CallbackManagerForToolRun] = None,
@@ -838,7 +812,7 @@ class WriteFile(BaseTool):
 
 
 class CreateFileInput(BaseModel):
-    command: CreateFileCommand = Field(description="the command to use to create the file")
+    command: str = Field(description="the command to use to create the file")
     path: str = Field(description="path to the file to create")
 
 
@@ -850,7 +824,7 @@ class CreateFile(BaseTool):
 
     def createfile(
             self,
-            command: CreateFileCommand,
+            command: str,
             path: str,
     ) -> Dict:
         p = self.exec(f"{command} {path}")
@@ -872,7 +846,7 @@ class CreateFile(BaseTool):
 
     def _run(
             self,
-            command: CreateFileCommand,
+            command: str,
             path: str,
             run_manager: Optional[CallbackManagerForToolRun] = None,
     ) -> Dict:
@@ -1324,9 +1298,14 @@ class CTFEnv:
         self.log.user_message(self.rounds, self.obs)
         try:
             response = self.llm.invoke({"input": self.obs})
+            print(response)
+            input()
             toolcalls = self._parse_response(response)
+            print(toolcalls)
+            input()
             if 'error' in toolcalls:
                 self.obs = f"Observation: {toolcalls['error']}"
+                input()
                 self.log.assistant_message(self.obs)
                 return
             self.obs = f"Observation: {json.dumps(toolcalls)}"
@@ -1340,6 +1319,7 @@ class CTFEnv:
             self.obs = "Final Answer: I give up."
             return
         except Exception as e:
+            logging.exception(e)
             obs = "Observation: Your response is not a valid JSON blob. Please check the format and try again."
             self.obs = obs
         # except Exception:
