@@ -180,6 +180,7 @@ Now begin your task! Remember that the tools available to you are: {toolset}, wh
 The challenge description: 
 """
 
+
 class DockerHelper:
     def __init__(self, chal, container):
         self.container = container
@@ -191,6 +192,7 @@ class DockerHelper:
             ['--user', 'ctfbench'] + \
             ['bash', '-c', command_with_arguments],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
 
 SCRIPT_DIR = Path(__file__).parent.parent.resolve()
 GHIDRA = SCRIPT_DIR / 'ghidra_11.0_PUBLIC/support/analyzeHeadless'
@@ -983,6 +985,7 @@ class CheckFlag(BaseTool):
         else:
             return {"correct": False}
 
+
 CHECKFLAGTOOLS = [CheckFlag()]
 FILETOOLS = [ReadFile(), WriteFile(), CreateFile(), RemoveFile()]
 GIVEUPTOOLS = [GiveUp()]
@@ -1004,8 +1007,9 @@ toolhandlers = {
     tool.name: tool.handler for tool in DEFAULT_TOOLSET
 }
 
+
 class CTFChallenge:
-    def __init__(self, challenge_json, index):
+    def __init__(self, challenge_json, logfile):
         self.challenge_json = challenge_json.resolve()
         self.category = self.challenge_json.parent.parent.name
         self.chaldir = self.challenge_json.parent
@@ -1014,6 +1018,8 @@ class CTFChallenge:
         self.network = "ctfnet"
         self.challenge = json.loads(challenge_json.read_text())
         self.setup = self.challenge.get("setup", None)
+        if self.setup:
+            self.setup = self.setup.spilt('\n')
         self.real_flag = self.challenge["flag"] if isinstance(self.challenge["flag"], str) else self.challenge['flag'][
             'content']
         # self.challenge_container = self.challenge.get("container_image")
@@ -1045,9 +1051,10 @@ class CTFChallenge:
         # detected the flag in the output or because the CheckFlag tool was called
         # with the correct flag
         self.solved = False
-        self.log_dir = Path(__file__).resolve().parent / "logs" / self.category / self.challenge["name"]
+        self.logfile = logfile
+        self.log_dir = Path(logfile).parent
         self.log = Logger(
-            log_file=self.log_dir / f"mistral.conversation{index}.json",
+            log_file=logfile,
             logger=logging.getLogger(self.challenge["name"]),
             gold_file=self.chaldir / "solution.json"
         )
@@ -1155,13 +1162,15 @@ def generate_tool_description_and_args(tools: List[BaseTool]):
 
 
 class CTFEnv:
-    def __init__(self):
+    def __init__(self, chal_json, logfile):
         self.max_rounds = 30
         # real all challenge.json files
         self.challenge_jsons = [chal for chal in (Path.cwd() / "chals").rglob("challenge.json")]
         self.chal_dirs = [jsondir.parent for jsondir in self.challenge_jsons]
         self.current_index = 0
-        self.chal = CTFChallenge(self.challenge_jsons[self.current_index], self.current_index)
+        # self.chal = CTFChallenge(self.challenge_jsons[self.current_index], logfile)
+        self.chal = CTFChallenge(chal_json, logfile)
+        print(self.chal)
         # in the unified environment, the container name is always ctfbench
         self.container = "ctfbench"
         self.chal_dir = self.chal_dirs[self.current_index]
@@ -1209,7 +1218,8 @@ class CTFEnv:
             self.copy2container(self.chal.files)
         # eval setup command
         if self.chal.setup:
-            self.exec(self.chal.setup)
+            for cmd in self.chal.setup:
+                self.exec(cmd)
 
     def stop_challenge(self):
         self.chal.stop_challenge_container()

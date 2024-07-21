@@ -726,7 +726,7 @@ def main():
     args = parser.parse_args()
     status.set(quiet=args.quiet, debug=args.debug)
     challenge_json = Path(args.challenge_json).resolve()
-    with CTFEnv() as convo:
+    with CTFEnv(args.logfile) as convo:
         try:
             while True:
                 convo.step()
