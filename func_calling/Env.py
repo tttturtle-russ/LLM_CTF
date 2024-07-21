@@ -1294,9 +1294,9 @@ class CTFEnv:
         self.log.user_message(self.rounds, self.obs)
         try:
             response = self.llm.invoke({"input": self.obs})
-            toolcalls = self._parse_response(response)
-            print(response)
+            print(f"Reponse: {response}")
             input()
+            toolcalls = self._parse_response(response)
             if 'error' in toolcalls:
                 self.obs = f"Observation: {toolcalls['error']}"
             else:
@@ -1313,7 +1313,7 @@ class CTFEnv:
             obs = "Observation: Your response is not a valid JSON blob. Please check the format and try again."
             self.obs = obs
         finally:
-            self.log.assistant_message(self.obs)
+            # self.log.assistant_message(self.obs)
             self.rounds += 1
             if self.chal.solved or (self.chal.real_flag in self.obs):
                 self.finish_reason = "solved"
