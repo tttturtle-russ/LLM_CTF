@@ -31,7 +31,7 @@ from typing import Dict, Optional, Type, Union, List
 
 category_friendly = {
     "rev": "reverse engineering",
-    "Pwn": "binary exploitation",
+    "pwn": "binary exploitation",
     "web": "web security",
     "crypto": "cryptography",
     "misc": "miscellaneous",
