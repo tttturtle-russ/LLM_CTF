@@ -45,8 +45,6 @@ class MistralAgent(BaseChatModel):
         content = repair_json(resp.choices[0].message.content)
         self._messages.append({"role": "assistant", "content": content})
         status.assistant_message(content)
-        print(f"Messages: {self._messages}")
-        input()
         return ChatResult(
             generations=[
                 ChatGeneration(
