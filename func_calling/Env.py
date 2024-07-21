@@ -1179,6 +1179,7 @@ class CTFEnv:
         self.stop_challenge()
 
     def tool_chain(self, model_output):
+        self.log.assistant_message(model_output)
         tool_map = {tool.name: tool for tool in self.tools}
         chosen_tool = tool_map[model_output["name"]]
         return itemgetter("arguments") | chosen_tool
@@ -1294,8 +1295,6 @@ class CTFEnv:
         self.log.user_message(self.rounds, self.obs)
         try:
             response = self.llm.invoke({"input": self.obs})
-            print(f"Response: {response}")
-            input()
             toolcalls = self._parse_response(response)
             if 'error' in toolcalls:
                 self.obs = f"Observation: {toolcalls['error']}"
