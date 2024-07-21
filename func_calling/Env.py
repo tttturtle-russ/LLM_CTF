@@ -1297,24 +1297,19 @@ class CTFEnv:
             toolcalls = self._parse_response(response)
             if 'error' in toolcalls:
                 self.obs = f"Observation: {toolcalls['error']}"
-                self.log.assistant_message(self.obs)
-                return
-            self.obs = f"Observation: {json.dumps(toolcalls)}"
+            else:
+                self.obs = f"Observation: {json.dumps(toolcalls)}"
         except KeyError as e:
             obs = f"Observation: Unknown tool {e}. You must use one of the following tools:\n{generate_tool_description_and_args(self.tools)}"
             self.obs = obs
-            return
         except GiveUpException:
             self.finish_reason = "give up"
             self.log.finish(self.finish_reason)
             self.obs = "Final Answer: I give up."
             return
-        except Exception as e:
+        except Exception:
             obs = "Observation: Your response is not a valid JSON blob. Please check the format and try again."
             self.obs = obs
-        # except Exception:
-        #     obs = f"Observation: You response is not the right format."
-        #     self.obs = obs
         finally:
             self.log.assistant_message(self.obs)
             self.rounds += 1
