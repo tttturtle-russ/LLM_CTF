@@ -825,7 +825,7 @@ class CreateFile(BaseTool):
             command: str,
             path: str,
     ) -> Dict:
-        p = self.exec(f"{command} {path}")
+        p = self.env.exec(f"{command} {path}")
         if p is None:
             return {
                 "error": {
@@ -1301,7 +1301,7 @@ class CTFEnv:
                 return
             self.obs = f"Observation: {json.dumps(toolcalls)}"
         except KeyError as e:
-            obs = f"Observation: Unknown tool {e}."
+            obs = f"Observation: Unknown tool {e}. You must use one of the following tools:\n{generate_tool_description_and_args(self.tools)}"
             self.obs = obs
             return
         except GiveUpException:
@@ -1310,7 +1310,6 @@ class CTFEnv:
             self.obs = "Final Answer: I give up."
             return
         except Exception as e:
-            logging.exception(e)
             obs = "Observation: Your response is not a valid JSON blob. Please check the format and try again."
             self.obs = obs
         # except Exception:
