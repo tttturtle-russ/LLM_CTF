@@ -192,7 +192,7 @@ class DockerHelper:
             [self.container] + \
             ['bash', '-c', command_with_arguments],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print(f"\n\n\n\nExec: {command_with_arguments}:\nResult: {p.stdout}")
+        print(f"\n\n\n\nExec: {command_with_arguments}\nStdout: {p.stdout}\nStderr: {p.stderr}")
         input()
         return p
 
