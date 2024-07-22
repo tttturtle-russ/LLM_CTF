@@ -25,8 +25,9 @@ class Logger:
         with open(gold_file, "r") as f:
             self.gold = json.load(f)
         self.len = len(self.gold)
-        self.gold_path = None
+        self.gold_path = self.gold[:self.len // 3]
         self.score = 0.0
+        self.index = 0
 
 
     def log(self, message: str):
@@ -96,12 +97,15 @@ class Logger:
 
     def assistant_message(self, message: str):
         self.json["assistant"] = message
-        self.compare_step(message, self.gold[self.json["rounds"]])
+        if self.index < len(self.gold):
+            self.compare_step(message, self.gold[self.index])
+            self.index += 1
         self.content.append(self.json.copy())
         self.json.clear()
 
     def finish(self, reason: str):
         self.finish_reason = reason
+        self.compare_path(self.content[:len(self.gold_path)])
         self.write_to_file()
 
     def code(self, language, code):
