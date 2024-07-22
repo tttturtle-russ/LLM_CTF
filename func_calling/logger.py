@@ -96,7 +96,7 @@ class Logger:
 
     def assistant_message(self, message: str):
         self.json["assistant"] = message
-        self.compare_step(message, self.gold[self.json["round"]])
+        self.compare_step(message, self.gold[self.json["rounds"]])
         self.content.append(self.json.copy())
         self.json.clear()
 
