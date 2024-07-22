@@ -28,6 +28,7 @@ class Logger:
         self.gold_path = None
         self.score = 0.0
 
+
     def log(self, message: str):
         if self.logger:
             self.logger.log(level=logging.DEBUG, msg=message)
@@ -95,6 +96,7 @@ class Logger:
 
     def assistant_message(self, message: str):
         self.json["assistant"] = message
+        self.compare_step(message, self.gold[self.json["round"]])
         self.content.append(self.json.copy())
         self.json.clear()
 
