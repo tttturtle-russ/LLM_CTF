@@ -679,7 +679,6 @@ class GiveUp(BaseTool):
         return {"give_up": True}
 
 
-
 class ReadFileInput(BaseModel):
     command: str = Field(description="the command to use to read the file")
 
@@ -929,8 +928,10 @@ class CheckFlag(BaseTool):
         else:
             return {"correct": False}
 
+
 class RunCommandInput(BaseModel):
     command: str = Field(description="The command you want to run")
+
 
 class RunCommand(BaseTool):
     name = "run_command"
@@ -966,15 +967,25 @@ class RunCommand(BaseTool):
             "stderr": output.get("stderr", ""),
         }
 
+
 CHECKFLAGTOOLS = [CheckFlag()]
 FILETOOLS = [ReadFile(), WriteFile(), CreateFile(), RemoveFile()]
 GIVEUPTOOLS = [GiveUp()]
 PROCESSTOOLS = [KillProcess()]
 PKGTOOLS = [InstallPkg()]
 NETTOOLS = [ListenCommandTool(), RequestCommandTool(), ScanCommandTool()]
-REVERSETOOLS = [Decompile(), Disassemble()]
+# REVERSETOOLS = [Decompile(), Disassemble()]
 GENERALTOOL = [RunCommand()]
-DEFAULT_TOOLSET = REVERSETOOLS + FILETOOLS + CHECKFLAGTOOLS + GIVEUPTOOLS + PROCESSTOOLS + PKGTOOLS + NETTOOLS + GENERALTOOL
+DEFAULT_TOOLSET = (
+    # REVERSETOOLS +
+        FILETOOLS +
+        CHECKFLAGTOOLS +
+        GIVEUPTOOLS +
+        PROCESSTOOLS +
+        PKGTOOLS +
+        NETTOOLS +
+        GENERALTOOL
+)
 
 TOOLSETS = {
     "crypto": FILETOOLS + CHECKFLAGTOOLS + GIVEUPTOOLS + PKGTOOLS + PROCESSTOOLS + GENERALTOOL,
@@ -986,6 +997,7 @@ TOOLSETS = {
 toolhandlers = {
     tool.name: tool.handler for tool in DEFAULT_TOOLSET
 }
+
 
 class CTFChallenge:
     def __init__(self, challenge_json, logfile):
