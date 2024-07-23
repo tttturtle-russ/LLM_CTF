@@ -1289,6 +1289,8 @@ class CTFEnv:
         output = response['output']
         tool_name = response['name']
         self.log.tool_call(response)
+        print(f"Response: {response}")
+        input()
         return toolhandlers.get(tool_name, RunCommand.handler)(output)
 
     def step(self):
