@@ -15,6 +15,7 @@ from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.tools import BaseTool
+from pydantic.v1.error_wrappers import ValidationError
 
 from mistral import MistralAgent
 from logger import Logger
@@ -1315,6 +1316,9 @@ class CTFEnv:
             self.log.finish(self.finish_reason)
             self.obs = "Final Answer: I give up."
             return
+        except ValidationError:
+            self.obs = "Observation: Your response is not in the right format. Your JSON response should contain a `command` field. Here is an example: {\"name\": \"run_command\", \"arguments\": {\"command\": \"Your command here\"}}"
+
         except Exception as e:
             logging.exception(e)
             input()
