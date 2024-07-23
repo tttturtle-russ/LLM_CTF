@@ -955,8 +955,13 @@ class RunCommand(BaseTool):
     @staticmethod
     def handler(output) -> Dict:
         if 'error' in output:
-            return {"error": f"Failed to run command: {output['error']['message']}"}
-        return {"success": True}
+            return {
+                "error": f"Failed to run command: {output['error']['message']}"
+            }
+        return {
+            "stdout": output.get("stdout", ""),
+            "stderr": output.get("stderr", ""),
+        }
 
 CHECKFLAGTOOLS = [CheckFlag()]
 FILETOOLS = [ReadFile(), WriteFile(), CreateFile(), RemoveFile()]
