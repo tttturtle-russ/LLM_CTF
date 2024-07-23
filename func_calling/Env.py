@@ -1309,8 +1309,6 @@ class CTFEnv:
         output = response['output']
         tool_name = response['name']
         self.log.tool_call(response)
-        print(f"Response: {response}")
-        input()
         return toolhandlers.get(tool_name, RunCommand.handler)(output)
 
     def step(self):
@@ -1334,7 +1332,6 @@ class CTFEnv:
             self.obs = "Observation: Your response is not in the right format. Your JSON response should contain a `command` field. Here is an example: {\"name\": \"run_command\", \"arguments\": {\"command\": \"Your command here\"}}"
         except Exception as e:
             logging.exception(e)
-            input()
             obs = "Observation: Your response is not a valid JSON blob. Please check the format and try again."
             self.obs = obs
         finally:
