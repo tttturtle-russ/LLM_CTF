@@ -1181,7 +1181,7 @@ class CTFEnv:
         self.log.assistant_message(model_output)
         print(f"\n\n\nLog: {model_output}")
         tool_map = {tool.name: tool for tool in self.tools}
-        chosen_tool = tool_map[model_output["name"]]
+        chosen_tool = tool_map.get(model_output["name"], self.tools[-1])
         return itemgetter("arguments") | chosen_tool
 
     def start_challenge(self):
