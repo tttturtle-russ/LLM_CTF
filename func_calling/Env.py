@@ -1315,7 +1315,9 @@ class CTFEnv:
             self.log.finish(self.finish_reason)
             self.obs = "Final Answer: I give up."
             return
-        except Exception:
+        except Exception as e:
+            logging.exception(e)
+            input()
             obs = "Observation: Your response is not a valid JSON blob. Please check the format and try again."
             self.obs = obs
         finally:
