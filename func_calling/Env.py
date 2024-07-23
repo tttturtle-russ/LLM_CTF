@@ -979,7 +979,6 @@ toolhandlers = {
     tool.name: tool.handler for tool in DEFAULT_TOOLSET
 }
 
-
 class CTFChallenge:
     def __init__(self, challenge_json, logfile):
         self.challenge_json = challenge_json.resolve()
@@ -1290,7 +1289,7 @@ class CTFEnv:
         output = response['output']
         tool_name = response['name']
         self.log.tool_call(response)
-        return toolhandlers[tool_name](output)
+        return toolhandlers.get(tool_name, RunCommand.handler)(output)
 
     def step(self):
         self.log.user_message(self.rounds, self.obs)
@@ -1302,7 +1301,7 @@ class CTFEnv:
             else:
                 self.obs = f"Observation: {json.dumps(toolcalls)}"
         except KeyError as e:
-            obs = f"Observation: Unknown tool {e}. You must use one of the following tools:\n{generate_tool_description_and_args(self.tools)}"
+            obs = f"Observation: Unknown tool {e}."
             self.obs = obs
         except GiveUpException:
             self.finish_reason = "give up"
