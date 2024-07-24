@@ -17,19 +17,18 @@ else
 fi
 
 for category in $categories; do
-    for model in /home/haoyang/deepseek-coder-6.7b-base; do
-        for chal in chals/"${category}"/*/challenge.json; do
+    for year in 2015 2016; do
+        for chal in chals/CTF/CSAW-CTF-${year}-Quals/"${category}"/*/challenge.json; do
             chalname=$(basename "$(dirname "$chal")")
-            model_name=$(basename "${model}")
             for i in {1..10}; do
-                log="logs/${category}/${chalname}/conversation.${model_name}.${i}.json"
+                log="logs/${category}/${chalname}/conversation.deepseek-coder-6.7b-base.${i}.json"
                 if [ -f "${log}" ]; then
-                    printf '[%02d/10] skipping %s attempting %s/%s; log exists\n' $i "${model}" "${category}" "${chalname}"
+                    printf '[%02d/10] skipping %s attempting %s/%s; log exists\n' $i /home/haoyang/deepseek-coder-6.7b-base "${category}" "${chalname}"
                     continue
                 fi
                 cleanup_container
-                printf '[%02d/10] %s attempting %s/%s\n' $i "${model}" "${category}" "${chalname}"
-                python llm_ctf_solve.py -d -M ${model} -m 30 -L "${log}" "${chal}"
+                printf '[%02d/10] %s attempting %s/%s\n' $i /home/haoyang/deepseek-coder-6.7b-base "${category}" "${chalname}"
+                python llm_ctf_solve.py -d -M /home/haoyang/deepseek-coder-6.7b-base -m 30 -L "${log}" "${chal}"
             done
         done
     done
