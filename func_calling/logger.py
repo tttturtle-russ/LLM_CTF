@@ -60,7 +60,7 @@ class Logger:
             self.compare_step(step, gold_step)
 
     def write_to_file(self):
-        obj = {"results": self.content, "finish_reason": self.finish_reason, "score": self.score}
+        obj = {"results": self.content, "finish_reason": self.finish_reason, "score": self.score / len(self.gold_path)}
         with open(self.log_file, "w") as f:
             json.dump(obj, f, indent=4)
 
