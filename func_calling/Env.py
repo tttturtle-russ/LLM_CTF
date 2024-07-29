@@ -1325,7 +1325,9 @@ class CTFEnv:
             self.log.finish(self.finish_reason)
             self.obs = "Final Answer: I give up."
             return
-        except ValidationError or AssertionError:
+        except ValidationError:
+            self.obs = "Observation: Your response is not in the right format. Your JSON response should contain a `command` field. Here is an example: {\"name\": \"run_command\", \"arguments\": {\"command\": \"Your command here\"}}"
+        except AssertionError:
             self.obs = "Observation: Your response is not in the right format. Your JSON response should contain a `command` field. Here is an example: {\"name\": \"run_command\", \"arguments\": {\"command\": \"Your command here\"}}"
         except Exception as e:
             logging.exception(e)
