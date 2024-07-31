@@ -765,6 +765,12 @@ def main():
                     )
                     convo.finish_reason = "give_up"
                     return 0
+                if convo.finish_reason == "solved":
+                    status.print(
+                        "[green bold]The LLM solved the problem! [/green bold]",
+                        markup=True
+                    )
+                    return 0
                 # Otherwise, we returned because the model didn't respond with anything; prompt
                 # it to keep going.
                 # next_msg = "Please proceed to the next step using your best judgment."
