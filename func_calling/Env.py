@@ -4,6 +4,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import threading
 import traceback
 import traceback as tb
 from operator import itemgetter
@@ -183,10 +184,15 @@ class DockerHelper:
         self.chal = chal
 
     def exec(self, command_with_arguments):
-        p = subprocess.run(
+        # p = subprocess.run(
+        #     ['docker', 'exec', '--user', 'ctfbench'] + \
+        #     [self.container] + \
+        #     ['bash', '-c', command_with_arguments, "&"],
+        #     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(
             ['docker', 'exec', '--user', 'ctfbench'] + \
             [self.container] + \
-            ['bash', '-c', command_with_arguments],
+            ['bash', '-c', command_with_arguments, "&"],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         return p
 
@@ -403,13 +409,13 @@ class ListenCommandTool(BaseTool):
         if p.returncode != 0:
             return {
                 "error": {
-                    "message": p.stderr.decode(),
+                    "message": p.stderr.read(),
                     "tool": "net_listen"
                 }
             }
         return {
-            "stdout": p.stdout.decode(),
-            "stderr": p.stderr.decode(),
+            "stdout": p.stdout.read().read().decode(),
+            "stderr": p.stderr.read().read().decode(),
             "returncode": p.returncode,
             "outfile": "net.out"
         }
@@ -443,13 +449,13 @@ class ListenCommandTool(BaseTool):
         if p.returncode != 0:
             return {
                 "error": {
-                    "message": p.stderr.decode(),
+                    "message": p.stderr.read().decode(),
                     "tool": "net_listen"
                 }
             }
         return {
-            "stdout": p.stdout.decode(),
-            "stderr": p.stderr.decode(),
+            "stdout": p.stdout.read().decode(),
+            "stderr": p.stderr.read().decode(),
             "returncode": p.returncode,
             "outfile": "nc.out"
         }
@@ -481,13 +487,13 @@ class RequestCommandTool(BaseTool):
         if p.returncode != 0:
             return {
                 "error": {
-                    "message": p.stderr.decode(),
+                    "message": p.stderr.read().decode(),
                     "tool": "net_request"
                 }
             }
         return {
-            "stdout": p.stdout.decode(),
-            "stderr": p.stderr.decode(),
+            "stdout": p.stdout.read().decode(),
+            "stderr": p.stderr.read().decode(),
             "returncode": p.returncode,
         }
 
@@ -530,13 +536,13 @@ class ScanCommandTool(BaseTool):
         if p.returncode != 0:
             return {
                 "error": {
-                    "message": p.stderr.decode(),
+                    "message": p.stderr.read().decode(),
                     "tool": "net_scan"
                 }
             }
         return {
-            "stdout": p.stdout.decode(),
-            "stderr": p.stderr.decode(),
+            "stdout": p.stdout.read().decode(),
+            "stderr": p.stderr.read().decode(),
             "returncode": p.returncode,
         }
 
@@ -586,7 +592,7 @@ class InstallPkg(BaseTool):
         if p.returncode != 0:
             return {
                 "error": {
-                    "message": p.stderr.decode(),
+                    "message": p.stderr.read().decode(),
                     "tool": "install_pkg"
                 }
             }
@@ -629,7 +635,7 @@ class KillProcess(BaseTool):
         if p.returncode != 0:
             return {
                 "error": {
-                    "message": p.stderr.decode(),
+                    "message": p.stderr.read().decode(),
                     "tool": "kill_process"
                 }
             }
@@ -701,11 +707,11 @@ class ReadFile(BaseTool):
         if p.returncode != 0:
             return {
                 "error": {
-                    "message": p.stderr.decode(),
+                    "message": p.stderr.read().decode(),
                     "tool": "read_file"
                 }
             }
-        return {"content": p.stdout.decode()}
+        return {"content": p.stdout.read().decode()}
 
     @staticmethod
     def handler(output) -> Dict:
@@ -753,7 +759,7 @@ class WriteFile(BaseTool):
         if p.returncode != 0:
             return {
                 "error": {
-                    "message": p.stderr.decode(),
+                    "message": p.stderr.read().decode(),
                     "tool": "write_file"
                 }
             }
@@ -805,7 +811,7 @@ class CreateFile(BaseTool):
         if p.returncode != 0:
             return {
                 "error": {
-                    "message": p.stderr.decode(),
+                    "message": p.stderr.read().decode(),
                     "tool": "create_file"
                 }
             }
@@ -857,7 +863,7 @@ class RemoveFile(BaseTool):
         if p.returncode != 0:
             return {
                 "error": {
-                    "message": p.stderr.decode(),
+                    "message": p.stderr.read().decode(),
                     "tool": "remove_file"
                 }
             }
@@ -944,13 +950,13 @@ class RunCommand(BaseTool):
         if p.returncode != 0:
             return {
                 "error": {
-                    "message": p.stderr.decode(),
+                    "message": p.stderr.read().decode(),
                     "tool": "run_command"
                 }
             }
         return {
-            "stdout": p.stdout.decode(),
-            "stderr": p.stderr.decode(),
+            "stdout": p.stdout.read().decode(),
+            "stderr": p.stderr.read().decode(),
         }
 
     @staticmethod
