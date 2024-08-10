@@ -127,9 +127,7 @@ new software in the container using `sudo apt-get install`, or Python packages w
 Your response starts here.
 {{
     "name": "read_file",
-    "arguments": {{
-        "command": "cd ~/ctf_files && cat easy_rev.py"
-    }}
+    "command": "cd ~/ctf_files && cat easy_rev.py"
 }}
 Your response ends here.
 
@@ -414,8 +412,8 @@ class ListenCommandTool(BaseTool):
                 }
             }
         return {
-            "stdout": p.stdout.read().read().decode(),
-            "stderr": p.stderr.read().read().decode(),
+            "stdout": p.stdout.read().decode(),
+            "stderr": p.stderr.read().decode(),
             "returncode": p.returncode,
             "outfile": "net.out"
         }
@@ -1318,6 +1316,8 @@ class CTFEnv:
         self.log.user_message(self.rounds, self.obs)
         try:
             response = self.llm.invoke({"input": self.obs})
+            print(f"Response: {response}")
+            input()
             toolcalls = self._parse_response(response)
             if 'error' in toolcalls:
                 self.obs = f"Observation: {toolcalls['error']}"
