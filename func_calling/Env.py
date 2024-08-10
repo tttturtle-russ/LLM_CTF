@@ -1326,8 +1326,6 @@ class CTFEnv:
         self.log.user_message(self.rounds, self.obs)
         try:
             response = self.llm.invoke({"input": self.obs})
-            print(f"Response: {response}")
-            input()
             toolcalls = self._parse_response(response)
             if 'error' in toolcalls:
                 self.obs = f"Observation: {toolcalls['error']}"
