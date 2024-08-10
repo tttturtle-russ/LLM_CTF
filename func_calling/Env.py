@@ -486,6 +486,7 @@ class RequestCommandTool(BaseTool):
                     "tool": "net_request"
                 }
             }
+        p.wait()
         if p.returncode != 0:
             return {
                 "error": {
@@ -590,7 +591,7 @@ class InstallPkg(BaseTool):
                     "tool": "install_pkg"
                 }
             }
-
+        p.wait()
         if p.returncode != 0:
             return {
                 "error": {
@@ -633,7 +634,7 @@ class KillProcess(BaseTool):
                     "tool": "kill_process"
                 }
             }
-
+        p.wait()
         if p.returncode != 0:
             return {
                 "error": {
@@ -706,6 +707,7 @@ class ReadFile(BaseTool):
                     "tool": "read_file"
                 }
             }
+        p.wait()
         if p.returncode != 0:
             return {
                 "error": {
@@ -758,6 +760,7 @@ class WriteFile(BaseTool):
                     "tool": "write_file"
                 }
             }
+        p.wait()
         if p.returncode != 0:
             return {
                 "error": {
@@ -810,6 +813,7 @@ class CreateFile(BaseTool):
                     "tool": "create_file"
                 }
             }
+        p.wait()
         if p.returncode != 0:
             return {
                 "error": {
@@ -862,6 +866,7 @@ class RemoveFile(BaseTool):
                     "tool": "remove_file"
                 }
             }
+        p.wait()
         if p.returncode != 0:
             return {
                 "error": {
@@ -956,6 +961,7 @@ class RunCommand(BaseTool):
                     "tool": "run_command"
                 }
             }
+        p.wait()
         return {
             "stdout": p.stdout.read().decode(),
             "stderr": p.stderr.read().decode(),
