@@ -194,7 +194,7 @@ class DockerHelper:
         p = subprocess.Popen(
             ['docker', 'exec', '--user', 'ctfbench'] + \
             [self.container] + \
-            ['bash', '-c', command_with_arguments, "&"],
+            ['bash', '-c', command_with_arguments],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         return p
 
