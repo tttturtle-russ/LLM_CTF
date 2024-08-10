@@ -79,7 +79,9 @@ The tool-use [Scratchpad] documents the history of tool usage, which is formatte
 You should only returns a json blob without any other information or nonsense, like this:
 {{
     "name": "tool_name",
-    "command": "tool command",
+    "arguments": {{
+        "command": "tool command",
+    }}
 }}
 
 The code [Scratchpad] documents the history of code usage, which is formatted as follows and should be used to structure your response:
@@ -127,7 +129,9 @@ new software in the container using `sudo apt-get install`, or Python packages w
 Your response starts here.
 {{
     "name": "read_file",
-    "command": "cd ~/ctf_files && cat easy_rev.py"
+    "argument": {{
+        "command": "cd ~/ctf_files && cat easy_rev.py"
+    }}
 }}
 Your response ends here.
 
