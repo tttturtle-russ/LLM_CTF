@@ -30,7 +30,7 @@ MODELS = [
     "gpt-4-0125-preview",
     "gpt-3.5-turbo-1106",
     "mistralai/Mistral-7B-Instruct-v0.2",
-    "deepseek-ai/deepseek-coder-6.7b-base"
+    "deepseek-ai/deepseek-coder-6.7b-base",
     "Meta-Llama-3-8B-Instruct"
 ]
 
