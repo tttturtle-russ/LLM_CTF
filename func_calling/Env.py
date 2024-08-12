@@ -19,6 +19,8 @@ from langchain_core.tools import BaseTool
 from pydantic.v1.error_wrappers import ValidationError
 
 from mistral import MistralAgent
+from llama3 import Llama3Agent
+from deepseek import DeepSeekAgent
 from logger import Logger
 from ctflogging import status
 
@@ -1162,9 +1164,14 @@ def generate_tool_description_and_args(tools: List[BaseTool]):
         result.append(f"{tool.name}: {json.dumps(func_args)}")
     return "\n\n".join(result)
 
+MODEL_MAP = {
+    "Meta-Llama-3-8B-Instruct": Llama3Agent,
+    "mistralai/Mistral-7B-Instruct-v0.2": MistralAgent,
+    "deepseek-ai/deepseek-coder-6.7b-base": DeepSeekAgent,
+}
 
 class CTFEnv:
-    def __init__(self, chal_json, logfile):
+    def __init__(self, chal_json, logfile, model):
         self.max_rounds = 30
         # real all challenge.json files
         self.challenge_jsons = [chal for chal in (Path.cwd() / "chals").rglob("challenge.json")]
@@ -1196,8 +1203,9 @@ class CTFEnv:
                 ("user", "{input}")
             ]
         )
+        self.agent = MODEL_MAP.get(model, MistralAgent)()
         self.llm = (self.template
-                    | MistralAgent()
+                    | self.agent
                     | JsonOutputParser()
                     | RunnablePassthrough.assign(output=self.tool_chain))
 
