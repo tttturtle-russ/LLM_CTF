@@ -27,7 +27,7 @@ for category in $categories; do
             fi
             cleanup_container
             printf '[%02d/10] %s attempting %s/%s\n' $i /home/haoyang/deepseek-coder-6.7b-base "${category}" "${chalname}"
-            python llm_ctf_solve.py -d -M /home/haoyang/deepseek-coder-6.7b-base -m 30 -L "${log}" "${chal}"
+            python llm_ctf_solve.py -d -M deepseek-ai/deepseek-coder-6.7b-base -m 30 -L "${log}" "${chal}"
         done
     done
 done

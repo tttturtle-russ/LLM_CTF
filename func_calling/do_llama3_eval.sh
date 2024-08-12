@@ -28,7 +28,7 @@ for category in $categories; do
             fi
             cleanup_container
             printf '[%02d/10] %s attempting %s/%s\n' $i llama3 "${category}" "${chalname}"
-            python llm_ctf_solve.py -d -M llama3 -m 30 -L "${log}" -A "${analysis}" "${chal}"
+            python llm_ctf_solve.py -d -M Meta-Llama-3-8B-Instruct -m 30 -L "${log}" -A "${analysis}" "${chal}"
         done
     done
 done

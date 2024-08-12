@@ -28,7 +28,7 @@ for category in $categories; do
             fi
             cleanup_container
             printf '[%02d/10] %s attempting %s/%s\n' $i /home/haoyang/Mistral-7B-Instruct-v0.2 "${category}" "${chalname}"
-            python llm_ctf_solve.py -d -M /home/haoyang/Mistral-7B-Instruct-v0.2 -m 30 -L "${log}" -A "${analysis}" "${chal}"
+            python llm_ctf_solve.py -d -M mistralai/Mistral-7B-Instruct-v0.2 -m 30 -L "${log}" -A "${analysis}" "${chal}"
         done
     done
 done
