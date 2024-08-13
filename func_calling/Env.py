@@ -198,6 +198,7 @@ class DockerHelper:
             [self.container] + \
             ['bash', '-c', command_with_arguments],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        while not p.stdout.readable() and not p.stderr.readable(): pass
         return p
 
 
@@ -963,7 +964,6 @@ class RunCommand(BaseTool):
                     "tool": "run_command"
                 }
             }
-        p.wait()
         return {
             "stdout": p.stdout.read().decode(),
             "stderr": p.stderr.read().decode(),
